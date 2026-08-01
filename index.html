@@ -115,7 +115,7 @@
 
     .meals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
     .meal-card { opacity: 0; animation: arrive .55s cubic-bezier(.2,.8,.2,1) forwards; }
-    .photo-wrap { position: relative; aspect-ratio: 4/3; overflow: hidden; border: 1.5px solid var(--ink); border-radius: 24px 20px 28px 18px; background: #efe6d6; box-shadow: 5px 6px 0 var(--ink); }
+    .photo-wrap { position: relative; aspect-ratio: 4/3; overflow: hidden; border: 1.5px solid var(--ink); border-radius: 24px 20px 28px 18px; background: #efe6d6; box-shadow: 5px 6px 0 var(--ink); cursor: zoom-in; }
     .photo-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s ease; }
     .meal-card:hover img { transform: scale(1.04) rotate(.5deg); }
     .tag { position: absolute; top: 13px; left: 13px; padding: 6px 10px; border-radius: 99px; background: var(--card); font-size: 11px; font-weight: 900; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
@@ -129,6 +129,12 @@
     .empty b { display: block; color: var(--ink); margin-bottom: 5px; }
     .toast { position: fixed; left: 50%; bottom: 26px; transform: translate(-50%, 30px); opacity: 0; pointer-events: none; padding: 12px 18px; border-radius: 99px; color: #fff; background: var(--ink); font-size: 13px; transition: .3s; z-index: 10; }
     .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .lightbox { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 28px; background: rgba(35,31,28,.88); backdrop-filter: blur(12px); opacity: 0; visibility: hidden; transition: opacity .22s ease, visibility .22s ease; }
+    .lightbox.open { opacity: 1; visibility: visible; }
+    .lightbox-photo { display: block; max-width: min(92vw, 1100px); max-height: 86vh; object-fit: contain; border: 3px solid #fff9ed; border-radius: 22px; box-shadow: 0 25px 80px rgba(0,0,0,.45); transform: scale(.94); transition: transform .28s cubic-bezier(.2,.8,.2,1); }
+    .lightbox.open .lightbox-photo { transform: scale(1); }
+    .lightbox-close { position: fixed; top: 20px; right: 20px; width: 46px; height: 46px; border: 2px solid #fff9ed; border-radius: 50%; color: #fff9ed; background: #302d2b; font-size: 28px; line-height: 1; box-shadow: 3px 3px 0 var(--berry); }
+    body.photo-open { overflow: hidden; }
 
     @keyframes arrive { from { transform: translateY(18px) rotate(-1deg); } to { opacity: 1; transform: none; } }
     @keyframes installPop { from { opacity: 0; transform: scale(.7) rotate(-5deg); } to { opacity: 1; transform: none; } }
@@ -187,6 +193,10 @@
     </section>
   </main>
   <div class="toast" id="toast">又收集到一份美味 ✦</div>
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Photo preview">
+    <button class="lightbox-close" id="lightboxClose" aria-label="Close">×</button>
+    <img class="lightbox-photo" id="lightboxPhoto" alt="Expanded food diary photo" />
+  </div>
 
   <script>
     const STORAGE_KEY = 'little-food-diary-v1';
@@ -288,6 +298,14 @@
       document.querySelectorAll('.delete').forEach(btn => btn.onclick = () => {
         entries = entries.filter(e => e.id !== btn.dataset.id); save(); render();
       });
+      document.querySelectorAll('.photo-wrap').forEach(wrap => wrap.onclick = event => {
+        if (event.target.closest('.delete')) return;
+        const photo = wrap.querySelector('img');
+        $('#lightboxPhoto').src = photo.src;
+        $('#lightboxPhoto').alt = photo.alt;
+        $('#lightbox').classList.add('open');
+        document.body.classList.add('photo-open');
+      });
     }
 
     function showToast() {
@@ -303,6 +321,13 @@
       installPrompt.prompt(); await installPrompt.userChoice; installPrompt = null; $('#installBtn').classList.remove('ready');
     };
     window.addEventListener('appinstalled', () => $('#installBtn').classList.remove('ready'));
+    function closePhoto() {
+      $('#lightbox').classList.remove('open'); document.body.classList.remove('photo-open');
+      setTimeout(() => { if (!$('#lightbox').classList.contains('open')) $('#lightboxPhoto').removeAttribute('src'); }, 230);
+    }
+    $('#lightboxClose').onclick = closePhoto;
+    $('#lightbox').onclick = event => { if (event.target === $('#lightbox')) closePhoto(); };
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') closePhoto(); });
     if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
     render();
   </script>
