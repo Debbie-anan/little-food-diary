@@ -1,0 +1,20 @@
+{
+  "name": "今日好好吃 · Little Food Diary",
+  "short_name": "好好吃",
+  "description": "一本简洁可爱的每日饮食照片手账。",
+  "lang": "zh-CN",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#fff9ed",
+  "theme_color": "#ff6d76",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
