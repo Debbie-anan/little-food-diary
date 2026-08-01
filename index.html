@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#fff9ed" />
+  <title>今日好好吃 · 饮食照片日记</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Ma+Shan+Zheng&family=ZCOOL+KuaiLe&display=swap');
+
+    :root {
+      --ink: #302d2b;
+      --muted: #8e877f;
+      --paper: #fff9ed;
+      --card: #fffdf8;
+      --berry: #ff6d76;
+      --berry-dark: #e95560;
+      --matcha: #8abf79;
+      --yolk: #ffc95a;
+      --line: #e9dfce;
+      --shadow: 0 16px 45px rgba(90, 72, 49, .11);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: "Baloo 2", "ZCOOL KuaiLe", cursive;
+      background:
+        radial-gradient(circle at 7% 8%, rgba(255, 201, 90, .22) 0 75px, transparent 76px),
+        radial-gradient(circle at 93% 30%, rgba(138, 191, 121, .16) 0 115px, transparent 116px),
+        var(--paper);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .35;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E");
+    }
+
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+
+    .shell { width: min(1120px, calc(100% - 34px)); margin: 0 auto; padding: 28px 0 96px; }
+
+    nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 56px; }
+    .brand { display: flex; align-items: center; gap: 12px; font-family: "ZCOOL KuaiLe", cursive; font-size: 20px; letter-spacing: .02em; }
+    .brand-mark {
+      width: 42px; height: 42px; display: grid; place-items: center;
+      border: 2px solid var(--ink); border-radius: 50% 48% 46% 52%;
+      background: var(--yolk); box-shadow: 3px 3px 0 var(--ink); transform: rotate(-5deg);
+    }
+    .nav-actions { display: flex; align-items: center; gap: 8px; }
+    .date-pill, .lang-btn { color: var(--muted); font-size: 13px; padding: 9px 14px; border: 1px solid var(--line); border-radius: 99px; background: rgba(255,255,255,.65); }
+    .lang-btn { color: var(--ink); font-weight: 800; transition: .2s; }
+    .lang-btn:hover { background: var(--yolk); transform: rotate(-2deg); }
+
+    .hero { display: grid; grid-template-columns: 1.12fr .88fr; align-items: center; gap: 72px; margin-bottom: 74px; }
+    .eyebrow { color: var(--berry-dark); font-weight: 900; font-size: 13px; letter-spacing: .18em; text-transform: uppercase; }
+    h1 { margin: 12px 0 16px; font-family: "ZCOOL KuaiLe", "Baloo 2", cursive; font-size: clamp(52px, 7vw, 92px); line-height: 1.05; letter-spacing: -.04em; font-weight: 400; }
+    h1 span { position: relative; color: var(--berry); font-family: "Ma Shan Zheng", cursive; font-weight: 400; letter-spacing: -.03em; }
+    h1 span::after { content: ""; position: absolute; height: 8px; left: 4%; right: -2%; bottom: -2px; border-radius: 50%; background: var(--yolk); z-index: -1; transform: rotate(-2deg); }
+    .intro { max-width: 520px; font-size: 16px; line-height: 1.8; color: var(--muted); }
+
+    .stats { display: flex; gap: 12px; margin-top: 28px; flex-wrap: wrap; }
+    .stat { min-width: 120px; padding: 14px 17px; border: 1px solid var(--line); background: rgba(255,255,255,.5); border-radius: 18px; }
+    .stat strong { display: block; font-size: 23px; letter-spacing: -.04em; }
+    .stat span { color: var(--muted); font-size: 12px; }
+
+    .upload-card {
+      position: relative; overflow: hidden; min-height: 372px; padding: 24px;
+      display: flex; flex-direction: column; justify-content: flex-end;
+      border: 2px solid var(--ink); border-radius: 38px 32px 40px 28px;
+      background: var(--matcha); box-shadow: 10px 12px 0 var(--ink);
+      transform: rotate(1.4deg); transition: transform .25s ease;
+    }
+    .upload-card:hover { transform: rotate(0deg) translateY(-3px); }
+    .doodle { position: absolute; font-family: "Ma Shan Zheng", cursive; color: rgba(48,45,43,.72); }
+    .doodle.one { top: 24px; left: 26px; font-size: 28px; transform: rotate(-8deg); }
+    .doodle.two { right: 28px; top: 35px; font-size: 50px; transform: rotate(12deg); }
+    .plate { position: absolute; width: 180px; height: 180px; left: 50%; top: 46%; transform: translate(-50%,-50%); border: 18px solid #f8f0df; border-radius: 50%; background: #fffaf0; box-shadow: 0 8px 0 rgba(48,45,43,.13); }
+    .plate::before { content: "🍳"; position: absolute; inset: 0; display: grid; place-items: center; font-size: 70px; transform: rotate(-8deg); }
+    .upload-btn { position: relative; z-index: 2; border: 2px solid var(--ink); border-radius: 18px; padding: 17px 20px; color: #fff; background: var(--ink); font-weight: 900; box-shadow: 0 5px 0 rgba(255,255,255,.4); transition: .2s ease; }
+    .upload-btn:hover { background: var(--berry); transform: translateY(-2px); }
+    #fileInput { display: none; }
+
+    .notebook { position: relative; padding: 34px 34px 30px 52px; border: 1px solid #dfd2bf; border-radius: 12px 26px 26px 12px; background: repeating-linear-gradient(to bottom, #fffdf8 0, #fffdf8 37px, #eadfcd 38px); box-shadow: 10px 12px 0 #dfcdb5, var(--shadow); min-height: 360px; }
+    .notebook::before { content: ""; position: absolute; left: 23px; top: 0; bottom: 0; width: 2px; background: rgba(255,109,118,.28); }
+    .rings { position: absolute; left: -10px; top: 34px; bottom: 34px; display: flex; flex-direction: column; justify-content: space-around; }
+    .rings i { display: block; width: 31px; height: 10px; border: 3px solid var(--ink); border-radius: 99px; background: #f4e7d1; box-shadow: 2px 2px 0 rgba(48,45,43,.18); }
+    .page-corner { position: absolute; right: 0; bottom: 0; width: 54px; height: 54px; border-radius: 28px 0 24px 0; background: linear-gradient(135deg, #efe1cb 50%, transparent 51%); opacity: .75; }
+    .section-head { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 27px; }
+    .section-head h2 { margin: 0; font-size: 26px; letter-spacing: -.05em; }
+    .section-head p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+    .clear-btn { border: 0; background: transparent; color: var(--muted); font-size: 13px; text-decoration: underline; text-underline-offset: 4px; }
+
+    .page-nav { display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 28px; }
+    .page-btn { width: 42px; height: 42px; border: 1.5px solid var(--ink); border-radius: 50%; background: var(--card); box-shadow: 3px 3px 0 var(--ink); font-size: 20px; transition: .18s; }
+    .page-btn:hover:not(:disabled) { background: var(--yolk); transform: translateY(-2px); }
+    .page-btn:disabled { opacity: .25; cursor: default; box-shadow: none; }
+    .page-count { min-width: 90px; text-align: center; color: var(--muted); font-size: 13px; }
+
+    .meals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+    .meal-card { opacity: 0; animation: arrive .55s cubic-bezier(.2,.8,.2,1) forwards; }
+    .photo-wrap { position: relative; aspect-ratio: 4/3; overflow: hidden; border: 1.5px solid var(--ink); border-radius: 24px 20px 28px 18px; background: #efe6d6; box-shadow: 5px 6px 0 var(--ink); }
+    .photo-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s ease; }
+    .meal-card:hover img { transform: scale(1.04) rotate(.5deg); }
+    .tag { position: absolute; top: 13px; left: 13px; padding: 6px 10px; border-radius: 99px; background: var(--card); font-size: 11px; font-weight: 900; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+    .delete { position: absolute; top: 11px; right: 11px; width: 30px; height: 30px; border: 0; border-radius: 50%; background: rgba(48,45,43,.8); color: white; opacity: 0; transition: .2s; }
+    .meal-card:hover .delete { opacity: 1; }
+    .caption { display: flex; justify-content: space-between; align-items: center; padding: 13px 5px 0; }
+    .caption strong { font-size: 14px; }
+    .caption time { color: var(--muted); font-size: 12px; }
+
+    .empty { grid-column: 1/-1; min-height: 190px; display: grid; place-items: center; text-align: center; border: 1.5px dashed #cfc3b2; border-radius: 26px; color: var(--muted); }
+    .empty b { display: block; color: var(--ink); margin-bottom: 5px; }
+    .toast { position: fixed; left: 50%; bottom: 26px; transform: translate(-50%, 30px); opacity: 0; pointer-events: none; padding: 12px 18px; border-radius: 99px; color: #fff; background: var(--ink); font-size: 13px; transition: .3s; z-index: 10; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    @keyframes arrive { from { transform: translateY(18px) rotate(-1deg); } to { opacity: 1; transform: none; } }
+    @media (max-width: 760px) {
+      .shell { width: min(100% - 26px, 600px); padding-top: 18px; }
+      nav { margin-bottom: 42px; }
+      .hero { grid-template-columns: 1fr; gap: 42px; margin-bottom: 58px; }
+      h1 { font-size: clamp(54px, 18vw, 78px); }
+      .upload-card { min-height: 330px; }
+      .meals { grid-template-columns: 1fr 1fr; }
+      .notebook { padding: 30px 20px 28px 40px; }
+    }
+    @media (max-width: 480px) {
+      .date-pill { display: none; }
+      .meals { grid-template-columns: 1fr; }
+      .stats { display: grid; grid-template-columns: 1fr 1fr; }
+      .stat { min-width: 0; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <nav>
+      <div class="brand"><div class="brand-mark">◡</div><span>今日好好吃</span></div>
+      <div class="nav-actions"><div class="date-pill" id="today"></div><button class="lang-btn" id="langBtn">EN</button></div>
+    </nav>
+
+    <section class="hero">
+      <div>
+        <div class="eyebrow" id="eyebrow">MY LITTLE FOOD DIARY</div>
+        <h1 id="heroTitle">记录每一顿<br><span>小小幸福</span></h1>
+        <p class="intro" id="intro">不算卡路里，不打分。只是把今天吃下的美好留住，慢慢收集成属于你的味道日记。</p>
+        <div class="stats">
+          <div class="stat"><strong id="todayCount">0</strong><span id="todayLabel">今日记录</span></div>
+          <div class="stat"><strong id="totalCount">0</strong><span id="totalLabel">累计美味</span></div>
+        </div>
+      </div>
+
+      <div class="upload-card">
+        <div class="doodle one" id="doodleText">今天吃什么？</div><div class="doodle two">✦</div>
+        <div class="plate"></div>
+        <button class="upload-btn" id="uploadBtn">拍下这顿美味 · 上传照片</button>
+        <input id="fileInput" type="file" accept="image/*" multiple />
+      </div>
+    </section>
+
+    <section class="notebook">
+      <div class="rings"><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="page-corner"></div>
+      <div class="section-head">
+        <div><h2 id="pageDate"></h2><p id="pageSubtitle">每一顿都值得被好好记得</p></div>
+        <button class="clear-btn" id="clearBtn">清空记录</button>
+      </div>
+      <div class="meals" id="meals"></div>
+      <div class="page-nav"><button class="page-btn" id="prevPage" aria-label="Previous page">‹</button><span class="page-count" id="pageCount"></span><button class="page-btn" id="nextPage" aria-label="Next page">›</button></div>
+    </section>
+  </main>
+  <div class="toast" id="toast">又收集到一份美味 ✦</div>
+
+  <script>
+    const STORAGE_KEY = 'little-food-diary-v1';
+    const $ = (s) => document.querySelector(s);
+    const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const todayKey = iso(new Date());
+    let entries = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    let language = localStorage.getItem('food-diary-language') || 'zh';
+    let pageIndex = 0;
+
+    const copy = {
+      zh: { brand:'今日好好吃', title:'记录每一顿<br><span>小小幸福</span>', intro:'不算卡路里，不打分。只是把今天吃下的美好留住，慢慢收集成属于你的味道日记。', today:'今日记录', total:'累计美味', doodle:'今天吃什么？', upload:'拍下这顿美味 · 上传照片', subtitle:'每一顿都值得被好好记得', clear:'清空记录', emptyTitle:'这一页还是空的', emptyBody:'上传一张美食照吧 🍓', caption:'好好吃饭 ♡', page:'第 {n} / {all} 页', toast:'又收集到一份美味 ✦', confirm:'要清空全部饮食记录吗？', meals:['早安早餐','今日午餐','下午小食','晚餐时光'] },
+      en: { brand:'Nibble Notes', title:'A little joy<br><span>in every bite</span>', intro:'No calorie counting, no scores. Just a sweet little place to save what made today delicious, one photo at a time.', today:"Today's bites", total:'All-time treats', doodle:"What's on the menu?", upload:'Snap the moment · Upload photo', subtitle:'Every meal deserves a tiny place in your story', clear:'Clear all', emptyTitle:'This page is still empty', emptyBody:'Add a delicious memory to this day 🍓', caption:'A happy little bite ♡', page:'Page {n} / {all}', toast:'One more tasty memory saved ✦', confirm:'Clear your entire food diary?', meals:['Good morning','Lunch o’clock','Afternoon treat','Dinner time'] }
+    };
+
+    // Upgrade entries saved by the earlier single-day version.
+    entries = entries.map(e => ({...e, date: /^\d{4}-\d{2}-\d{2}$/.test(e.date) ? e.date : todayKey}));
+    $('#langBtn').onclick = () => { language = language === 'zh' ? 'en' : 'zh'; localStorage.setItem('food-diary-language', language); render(); };
+    $('#uploadBtn').onclick = () => $('#fileInput').click();
+    $('#fileInput').onchange = async (event) => {
+      for (const file of [...event.target.files]) {
+        if (!file.type.startsWith('image/')) continue;
+        const data = await compressImage(file);
+        entries.unshift({ id: crypto.randomUUID(), data, date: todayKey, time: new Date().toLocaleTimeString(language === 'zh' ? 'zh-CN' : 'en-US', {hour:'2-digit', minute:'2-digit'}), mealType: mealType() });
+      }
+      pageIndex = 0; save(); render(); showToast(); event.target.value = '';
+    };
+
+    $('#clearBtn').onclick = () => {
+      if (!entries.length || !confirm(copy[language].confirm)) return;
+      entries = []; save(); render();
+    };
+
+    $('#prevPage').onclick = () => { pageIndex = Math.min(pageIndex + 1, getPages().length - 1); render(); };
+    $('#nextPage').onclick = () => { pageIndex = Math.max(pageIndex - 1, 0); render(); };
+
+    function mealType() {
+      const h = new Date().getHours();
+      return h < 10 ? 0 : h < 14 ? 1 : h < 17 ? 2 : 3;
+    }
+
+    function compressImage(file) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          const max = 1200, scale = Math.min(1, max / Math.max(img.width, img.height));
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width * scale; canvas.height = img.height * scale;
+          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', .78));
+        };
+        img.src = URL.createObjectURL(file);
+      });
+    }
+
+    function save() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(entries.slice(0, 30))); }
+      catch { alert('本地存储已满，请删除一些旧照片。'); }
+    }
+
+    function getPages() { return [...new Set([todayKey, ...entries.map(e => e.date)])].sort().reverse(); }
+
+    function formatDate(key, short = false) {
+      const d = new Date(key + 'T12:00:00');
+      return new Intl.DateTimeFormat(language === 'zh' ? 'zh-CN' : 'en-US', short ? {month:'long', day:'numeric', weekday:'long'} : {year:'numeric', month:'long', day:'numeric', weekday:'long'}).format(d);
+    }
+
+    function render() {
+      const c = copy[language], pages = getPages();
+      pageIndex = Math.min(pageIndex, pages.length - 1);
+      const activeDate = pages[pageIndex], pageEntries = entries.filter(e => e.date === activeDate);
+      document.documentElement.lang = language === 'zh' ? 'zh-CN' : 'en';
+      document.querySelector('.brand span').textContent = c.brand;
+      $('#langBtn').textContent = language === 'zh' ? 'EN' : '中文';
+      $('#today').textContent = formatDate(todayKey, true);
+      $('#heroTitle').innerHTML = c.title; $('#intro').textContent = c.intro;
+      $('#todayLabel').textContent = c.today; $('#totalLabel').textContent = c.total;
+      $('#doodleText').textContent = c.doodle; $('#uploadBtn').textContent = c.upload;
+      $('#pageDate').textContent = formatDate(activeDate); $('#pageSubtitle').textContent = c.subtitle;
+      $('#clearBtn').textContent = c.clear; $('#toast').textContent = c.toast;
+      $('#pageCount').textContent = c.page.replace('{n}', pageIndex + 1).replace('{all}', pages.length);
+      $('#prevPage').disabled = pageIndex === pages.length - 1; $('#nextPage').disabled = pageIndex === 0;
+      $('#todayCount').textContent = entries.filter(e => e.date === todayKey).length;
+      $('#totalCount').textContent = entries.length;
+      if (!pageEntries.length) {
+        $('#meals').innerHTML = `<div class="empty"><div><b>${c.emptyTitle}</b>${c.emptyBody}</div></div>`;
+        return;
+      }
+      $('#meals').innerHTML = pageEntries.map((e, i) => `
+        <article class="meal-card" style="animation-delay:${i * .07}s">
+          <div class="photo-wrap">
+            <img src="${e.data}" alt="food diary photo" />
+            <span class="tag">${c.meals[e.mealType ?? 1]}</span>
+            <button class="delete" data-id="${e.id}" aria-label="delete">×</button>
+          </div>
+          <div class="caption"><strong>${c.caption}</strong><time>${e.time}</time></div>
+        </article>`).join('');
+      document.querySelectorAll('.delete').forEach(btn => btn.onclick = () => {
+        entries = entries.filter(e => e.id !== btn.dataset.id); save(); render();
+      });
+    }
+
+    function showToast() {
+      $('#toast').classList.add('show');
+      setTimeout(() => $('#toast').classList.remove('show'), 1900);
+    }
+    render();
+  </script>
+</body>
+</html>
