@@ -143,11 +143,14 @@
     .auth-card { position: relative; width: min(420px, 100%); padding: 34px; border: 2px solid var(--ink); border-radius: 28px 34px 25px 31px; background: var(--paper); box-shadow: 9px 10px 0 var(--ink); transform: rotate(-.5deg); }
     .auth-card h2 { margin: 0 0 8px; font-family: "Long Cang", cursive; font-size: 40px; font-weight: 400; }
     .auth-card p { margin: 0 0 20px; color: var(--muted); font-size: 17px; line-height: 1.45; }
-    .auth-card input { width: 100%; padding: 13px 15px; border: 1.5px solid var(--ink); border-radius: 14px; background: #fff; font-size: 16px; }
+    .auth-card input[type="email"], .auth-card input[type="password"] { width: 100%; margin-bottom: 10px; padding: 13px 15px; border: 1.5px solid var(--ink); border-radius: 14px; background: #fff; font-size: 16px; }
     .auth-submit { width: 100%; margin-top: 12px; padding: 13px; border: 1.5px solid var(--ink); border-radius: 14px; color: #fff; background: var(--berry); font-weight: 700; box-shadow: 3px 4px 0 var(--ink); }
     .auth-close { position: absolute; top: 13px; right: 15px; border: 0; background: transparent; font-size: 25px; }
     .auth-status { min-height: 22px; margin: 14px 0 0 !important; color: var(--berry-dark) !important; }
     .signout-btn { width: 100%; margin-top: 8px; padding: 10px; border: 0; color: var(--muted); background: transparent; text-decoration: underline; }
+    .remember-row { display: flex; align-items: center; gap: 8px; margin: 2px 0 4px; color: var(--muted); font-size: 15px; }
+    .remember-row input { width: 18px; height: 18px; accent-color: var(--berry); }
+    .auth-mode { width: 100%; border: 0; color: var(--berry-dark); background: transparent; text-decoration: underline; text-underline-offset: 3px; }
 
     @keyframes arrive { from { transform: translateY(18px) rotate(-1deg); } to { opacity: 1; transform: none; } }
     @keyframes installPop { from { opacity: 0; transform: scale(.7) rotate(-5deg); } to { opacity: 1; transform: none; } }
@@ -215,10 +218,13 @@
     <div class="auth-card">
       <button class="auth-close" id="authClose" aria-label="Close">×</button>
       <h2 id="authTitle">登录你的云端手账</h2>
-      <p id="authIntro">输入邮箱，我们会发送一封安全登录邮件。登录后照片只对你可见。</p>
+      <p id="authIntro">使用邮箱和密码登录，照片只对你可见。</p>
       <form id="authForm">
         <input id="emailInput" type="email" autocomplete="email" placeholder="你的邮箱" required />
-        <button class="auth-submit" id="authSubmit" type="submit">发送登录邮件</button>
+        <input id="passwordInput" type="password" autocomplete="current-password" minlength="6" placeholder="密码（至少 6 位）" required />
+        <label class="remember-row"><input id="rememberLogin" type="checkbox" checked /> <span id="rememberLabel">记住登录状态</span></label>
+        <button class="auth-submit" id="authSubmit" type="submit">登录</button>
+        <button class="auth-mode" id="authMode" type="button">第一次使用？创建账号</button>
       </form>
       <p class="auth-status" id="authStatus"></p>
       <button class="signout-btn" id="signoutBtn" hidden>退出登录</button>
@@ -230,7 +236,12 @@
     const STORAGE_KEY = 'little-food-diary-v1';
     const SUPABASE_URL = 'https://psizjjyvexytaaaetsne.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_Xaxr8xSsBh44pd8CJDBDSw_kh92RR9I';
-    const cloud = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const authStorage = {
+      getItem: key => (localStorage.getItem('remember-cloud-login') !== 'false' ? localStorage : sessionStorage).getItem(key),
+      setItem: (key, value) => (localStorage.getItem('remember-cloud-login') !== 'false' ? localStorage : sessionStorage).setItem(key, value),
+      removeItem: key => { localStorage.removeItem(key); sessionStorage.removeItem(key); }
+    };
+    const cloud = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { storage: authStorage, persistSession: true, autoRefreshToken: true } });
     const $ = (s) => document.querySelector(s);
     const iso = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
     const todayKey = iso(new Date());
@@ -414,16 +425,22 @@
     $('#accountBtn').onclick = openAuth;
     $('#authClose').onclick = closeAuth;
     $('#authModal').onclick = event => { if (event.target === $('#authModal')) closeAuth(); };
+    let authMode = 'signin';
+    $('#rememberLogin').checked = localStorage.getItem('remember-cloud-login') !== 'false';
+    $('#authMode').onclick = () => { authMode = authMode === 'signin' ? 'signup' : 'signin'; updateAccountUi(); };
     $('#authForm').onsubmit = async event => {
       event.preventDefault();
-      const button = $('#authSubmit'), email = $('#emailInput').value.trim();
+      const button = $('#authSubmit'), email = $('#emailInput').value.trim(), password = $('#passwordInput').value;
+      localStorage.setItem('remember-cloud-login', $('#rememberLogin').checked ? 'true' : 'false');
       button.disabled = true;
-      $('#authStatus').textContent = language === 'zh' ? '正在发送…' : 'Sending…';
-      const { error } = await cloud.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + location.pathname } });
+      $('#authStatus').textContent = language === 'zh' ? '正在连接云端…' : 'Connecting…';
+      const { data, error } = authMode === 'signin'
+        ? await cloud.auth.signInWithPassword({ email, password })
+        : await cloud.auth.signUp({ email, password });
       button.disabled = false;
-      $('#authStatus').textContent = error
-        ? error.message
-        : (language === 'zh' ? '登录邮件已发送，请打开邮箱点击链接。' : 'Login email sent. Open it and tap the link.');
+      if (error) $('#authStatus').textContent = error.message;
+      else if (data.session) $('#authStatus').textContent = language === 'zh' ? '登录成功，正在读取照片…' : 'Signed in. Loading photos…';
+      else $('#authStatus').textContent = language === 'zh' ? '账号已创建，但项目仍要求邮箱确认。请先在 Supabase 关闭 Confirm email。' : 'Account created, but email confirmation is still enabled in Supabase.';
     };
     $('#signoutBtn').onclick = async () => { await cloud.auth.signOut(); closeAuth(); };
 
@@ -435,8 +452,11 @@
       $('#signoutBtn').hidden = !currentUser;
       $('#authIntro').textContent = currentUser
         ? currentUser.email
-        : (language === 'zh' ? '输入邮箱，我们会发送一封安全登录邮件。登录后照片只对你可见。' : 'Enter your email for a secure login link. Your photos stay private.');
-      $('#authTitle').textContent = language === 'zh' ? '登录你的云端手账' : 'Your private cloud journal';
+        : (language === 'zh' ? '使用邮箱和密码登录，照片只对你可见。' : 'Sign in with email and password. Your photos stay private.');
+      $('#authTitle').textContent = language === 'zh' ? (authMode === 'signin' ? '登录云端手账' : '创建云端账号') : (authMode === 'signin' ? 'Sign in to your journal' : 'Create your account');
+      $('#authSubmit').textContent = language === 'zh' ? (authMode === 'signin' ? '登录' : '创建账号') : (authMode === 'signin' ? 'Sign in' : 'Create account');
+      $('#authMode').textContent = language === 'zh' ? (authMode === 'signin' ? '第一次使用？创建账号' : '已经有账号？返回登录') : (authMode === 'signin' ? 'New here? Create account' : 'Already registered? Sign in');
+      $('#rememberLabel').textContent = language === 'zh' ? '记住登录状态' : 'Remember me';
     }
 
     async function initCloud() {
