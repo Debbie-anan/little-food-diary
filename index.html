@@ -225,6 +225,7 @@
         <label class="remember-row"><input id="rememberLogin" type="checkbox" checked /> <span id="rememberLabel">记住登录状态</span></label>
         <button class="auth-submit" id="authSubmit" type="submit">登录</button>
         <button class="auth-mode" id="authMode" type="button">第一次使用？创建账号</button>
+        <button class="auth-mode" id="recoverMode" type="button">已有邮箱账号？设置或忘记密码</button>
       </form>
       <p class="auth-status" id="authStatus"></p>
       <button class="signout-btn" id="signoutBtn" hidden>退出登录</button>
@@ -428,17 +429,26 @@
     let authMode = 'signin';
     $('#rememberLogin').checked = localStorage.getItem('remember-cloud-login') !== 'false';
     $('#authMode').onclick = () => { authMode = authMode === 'signin' ? 'signup' : 'signin'; updateAccountUi(); };
+    $('#recoverMode').onclick = () => { authMode = authMode === 'recover' ? 'signin' : 'recover'; $('#authStatus').textContent = ''; updateAccountUi(); };
     $('#authForm').onsubmit = async event => {
       event.preventDefault();
       const button = $('#authSubmit'), email = $('#emailInput').value.trim(), password = $('#passwordInput').value;
       localStorage.setItem('remember-cloud-login', $('#rememberLogin').checked ? 'true' : 'false');
       button.disabled = true;
       $('#authStatus').textContent = language === 'zh' ? '正在连接云端…' : 'Connecting…';
-      const { data, error } = authMode === 'signin'
-        ? await cloud.auth.signInWithPassword({ email, password })
-        : await cloud.auth.signUp({ email, password });
+      let data, error;
+      if (authMode === 'signin') ({ data, error } = await cloud.auth.signInWithPassword({ email, password }));
+      else if (authMode === 'signup') ({ data, error } = await cloud.auth.signUp({ email, password }));
+      else if (authMode === 'recover') ({ data, error } = await cloud.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname }));
+      else ({ data, error } = await cloud.auth.updateUser({ password }));
       button.disabled = false;
       if (error) $('#authStatus').textContent = error.message;
+      else if (authMode === 'recover') $('#authStatus').textContent = language === 'zh' ? '设置密码的邮件已发送。打开邮件中的链接，再回到这里输入新密码。' : 'Password setup email sent. Open the link, then return here to choose a password.';
+      else if (authMode === 'update') {
+        authMode = 'signin';
+        $('#authStatus').textContent = language === 'zh' ? '新密码设置成功，今后可以直接登录。' : 'Your new password is ready.';
+        updateAccountUi();
+      }
       else if (data.session) $('#authStatus').textContent = language === 'zh' ? '登录成功，正在读取照片…' : 'Signed in. Loading photos…';
       else $('#authStatus').textContent = language === 'zh' ? '账号已创建，但项目仍要求邮箱确认。请先在 Supabase 关闭 Confirm email。' : 'Account created, but email confirmation is still enabled in Supabase.';
     };
@@ -449,13 +459,24 @@
       $('#accountBtn').textContent = currentUser ? c.loggedIn : c.login;
       $('#accountBtn').classList.toggle('signed-in', !!currentUser);
       $('#authForm').hidden = !!currentUser;
+      if (authMode === 'update') $('#authForm').hidden = false;
       $('#signoutBtn').hidden = !currentUser;
       $('#authIntro').textContent = currentUser
         ? currentUser.email
         : (language === 'zh' ? '使用邮箱和密码登录，照片只对你可见。' : 'Sign in with email and password. Your photos stay private.');
-      $('#authTitle').textContent = language === 'zh' ? (authMode === 'signin' ? '登录云端手账' : '创建云端账号') : (authMode === 'signin' ? 'Sign in to your journal' : 'Create your account');
-      $('#authSubmit').textContent = language === 'zh' ? (authMode === 'signin' ? '登录' : '创建账号') : (authMode === 'signin' ? 'Sign in' : 'Create account');
-      $('#authMode').textContent = language === 'zh' ? (authMode === 'signin' ? '第一次使用？创建账号' : '已经有账号？返回登录') : (authMode === 'signin' ? 'New here? Create account' : 'Already registered? Sign in');
+      const titles = language === 'zh' ? { signin:'登录云端手账', signup:'创建云端账号', recover:'找回你的账号', update:'设置新密码' } : { signin:'Sign in to your journal', signup:'Create your account', recover:'Recover your account', update:'Choose a new password' };
+      const submits = language === 'zh' ? { signin:'登录', signup:'创建账号', recover:'发送设置密码邮件', update:'保存新密码' } : { signin:'Sign in', signup:'Create account', recover:'Send password email', update:'Save new password' };
+      $('#authTitle').textContent = titles[authMode];
+      $('#authSubmit').textContent = submits[authMode];
+      $('#authMode').textContent = language === 'zh' ? (authMode === 'signup' ? '已经有账号？返回登录' : '第一次使用？创建账号') : (authMode === 'signup' ? 'Already registered? Sign in' : 'New here? Create account');
+      $('#recoverMode').textContent = language === 'zh' ? (authMode === 'recover' ? '返回登录' : '已有邮箱账号？设置或忘记密码') : (authMode === 'recover' ? 'Back to sign in' : 'Set or forgot your password');
+      $('#emailInput').hidden = authMode === 'update';
+      $('#emailInput').required = authMode !== 'update';
+      $('#passwordInput').hidden = authMode === 'recover';
+      $('#passwordInput').required = authMode !== 'recover';
+      $('.remember-row').hidden = authMode === 'recover' || authMode === 'update';
+      $('#authMode').hidden = authMode === 'recover' || authMode === 'update';
+      $('#recoverMode').hidden = authMode === 'update';
       $('#rememberLabel').textContent = language === 'zh' ? '记住登录状态' : 'Remember me';
     }
 
@@ -466,8 +487,9 @@
       if (currentUser) { await migrateLocalEntries(); if (!localEntries.length) await loadCloudEntries(); }
       cloud.auth.onAuthStateChange((event, session) => {
         currentUser = session?.user || null;
+        if (event === 'PASSWORD_RECOVERY') { authMode = 'update'; openAuth(); }
         updateAccountUi();
-        if (event === 'SIGNED_IN') setTimeout(async () => { await migrateLocalEntries(); if (!localEntries.length) await loadCloudEntries(); closeAuth(); }, 0);
+        if (event === 'SIGNED_IN') setTimeout(async () => { await migrateLocalEntries(); if (!localEntries.length) await loadCloudEntries(); if (authMode !== 'update') closeAuth(); }, 0);
         if (event === 'SIGNED_OUT') { entries = []; render(); }
       });
     }
