@@ -95,6 +95,7 @@
     .plate::before { content: "📷"; position: absolute; inset: 0; display: grid; place-items: center; font-size: 68px; transform: rotate(-8deg); filter: saturate(.85); }
     .upload-btn { position: relative; z-index: 2; border: 2px solid var(--ink); border-radius: 18px; padding: 17px 20px; color: #fff; background: var(--ink); font-weight: 900; box-shadow: 0 5px 0 rgba(255,255,255,.4); transition: .2s ease; }
     .upload-btn:hover { background: var(--berry); transform: translateY(-2px); }
+    .upload-btn:disabled { cursor: wait; opacity: .72; transform: none; }
     #fileInput { display: none; }
 
     .notebook { position: relative; padding: 34px 34px 30px 52px; border: 1px solid #dfd2bf; border-radius: 12px 26px 26px 12px; background: repeating-linear-gradient(to bottom, #fffdf8 0, #fffdf8 37px, #eadfcd 38px); box-shadow: 10px 12px 0 #dfcdb5, var(--shadow); min-height: 360px; }
@@ -208,8 +209,8 @@
     let pageIndex = 0;
 
     const copy = {
-      zh: { brand:'小小值得', title:'把今天的<br><span>小小值得</span>留下', intro:'一顿好吃的、一朵奇怪的云、路上遇见的小狗……把让你笑了一下的瞬间，都收进这本生活手账。', today:'今日收藏', total:'全部瞬间', doodle:'今天，什么值得记住？', upload:'收藏这个瞬间 · 上传照片', install:'安装 App', subtitle:'今天有什么，让你想多看一眼？', clear:'清空记录', emptyTitle:'这一页还在等故事', emptyBody:'上传一张值得记住的照片吧 ✿', caption:'今天的小小值得 ♡', page:'第 {n} / {all} 页', toast:'又收藏了一个小小瞬间 ✦', confirm:'要清空全部生活记录吗？', meals:['清晨发现','午间一刻','下午偶遇','夜晚收藏'] },
-      en: { brand:'Little Keeps', title:'Keep the little things<br><span>worth remembering</span>', intro:'A lovely meal, a strange little cloud, a dog you met on the way… Keep every moment that made you smile in this tiny life journal.', today:"Today's keeps", total:'All moments', doodle:"What felt worth remembering?", upload:'Keep this moment · Upload photo', install:'Install App', subtitle:'What made you stop and look today?', clear:'Clear all', emptyTitle:'This page is waiting for a story', emptyBody:'Add a moment worth remembering ✿', caption:'A little thing worth keeping ♡', page:'Page {n} / {all}', toast:'One more little moment saved ✦', confirm:'Clear your entire life journal?', meals:['Morning find','Midday moment','Afternoon sighting','Evening keep'] }
+      zh: { brand:'小小值得', title:'把今天的<br><span>小小值得</span>留下', intro:'一顿好吃的、一朵奇怪的云、路上遇见的小狗……把让你笑了一下的瞬间，都收进这本生活手账。', today:'今日收藏', total:'全部瞬间', doodle:'今天，什么值得记住？', upload:'收藏这个瞬间 · 上传照片', uploading:'照片处理中…', install:'安装 App', subtitle:'今天有什么，让你想多看一眼？', clear:'清空记录', emptyTitle:'这一页还在等故事', emptyBody:'上传一张值得记住的照片吧 ✿', caption:'今天的小小值得 ♡', page:'第 {n} / {all} 页', toast:'又收藏了一个小小瞬间 ✦', uploadError:'这张照片读取失败，请换一张或先将它保存为 JPG / PNG 后再试。', storageError:'照片没能保存，设备存储空间可能不足。', confirm:'要清空全部生活记录吗？', meals:['清晨发现','午间一刻','下午偶遇','夜晚收藏'] },
+      en: { brand:'Little Keeps', title:'Keep the little things<br><span>worth remembering</span>', intro:'A lovely meal, a strange little cloud, a dog you met on the way… Keep every moment that made you smile in this tiny life journal.', today:"Today's keeps", total:'All moments', doodle:"What felt worth remembering?", upload:'Keep this moment · Upload photo', uploading:'Preparing photo…', install:'Install App', subtitle:'What made you stop and look today?', clear:'Clear all', emptyTitle:'This page is waiting for a story', emptyBody:'Add a moment worth remembering ✿', caption:'A little thing worth keeping ♡', page:'Page {n} / {all}', toast:'One more little moment saved ✦', uploadError:'This photo could not be read. Try another one, or save it as JPG / PNG first.', storageError:'The photo could not be saved. Your device storage may be full.', confirm:'Clear your entire life journal?', meals:['Morning find','Midday moment','Afternoon sighting','Evening keep'] }
     };
 
     // Upgrade entries saved by the earlier single-day version.
@@ -217,12 +218,25 @@
     $('#langBtn').onclick = () => { language = language === 'zh' ? 'en' : 'zh'; localStorage.setItem('food-diary-language', language); render(); };
     $('#uploadBtn').onclick = () => $('#fileInput').click();
     $('#fileInput').onchange = async (event) => {
-      for (const file of [...event.target.files]) {
-        if (!file.type.startsWith('image/')) continue;
-        const data = await compressImage(file);
-        entries.unshift({ id: crypto.randomUUID(), data, date: todayKey, time: new Date().toLocaleTimeString(language === 'zh' ? 'zh-CN' : 'en-US', {hour:'2-digit', minute:'2-digit'}), mealType: mealType() });
+      const files = [...event.target.files].filter(file => file.type.startsWith('image/') || /\.(heic|heif|jpg|jpeg|png|webp)$/i.test(file.name));
+      if (!files.length) return;
+      const button = $('#uploadBtn');
+      button.disabled = true; button.textContent = copy[language].uploading;
+      let added = 0;
+      for (const file of files) {
+        try {
+          const data = await compressImage(file);
+          entries.unshift({ id: crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`, data, date: todayKey, time: new Date().toLocaleTimeString(language === 'zh' ? 'zh-CN' : 'en-US', {hour:'2-digit', minute:'2-digit'}), mealType: mealType() });
+          added++;
+        } catch (error) { console.warn('Photo upload failed:', file.name, error); }
       }
-      pageIndex = 0; save(); render(); showToast(); event.target.value = '';
+      event.target.value = '';
+      if (added) {
+        pageIndex = 0;
+        try { await save(); render(); showToast(); }
+        catch (error) { entries.splice(0, added); render(); alert(copy[language].storageError); }
+      } else { alert(copy[language].uploadError); }
+      button.disabled = false; button.textContent = copy[language].upload;
     };
 
     $('#clearBtn').onclick = () => {
@@ -239,22 +253,62 @@
     }
 
     function compressImage(file) {
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
         const img = new Image();
+        const timeout = setTimeout(() => { URL.revokeObjectURL(img.src); reject(new Error('Image decode timed out')); }, 15000);
         img.onload = () => {
-          const max = 1200, scale = Math.min(1, max / Math.max(img.width, img.height));
-          const canvas = document.createElement('canvas');
-          canvas.width = img.width * scale; canvas.height = img.height * scale;
-          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-          resolve(canvas.toDataURL('image/jpeg', .78));
+          clearTimeout(timeout);
+          try {
+            const max = 1000, scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.max(1, Math.round(img.naturalWidth * scale)); canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+            canvas.getContext('2d', { alpha: false }).drawImage(img, 0, 0, canvas.width, canvas.height);
+            URL.revokeObjectURL(img.src);
+            const data = canvas.toDataURL('image/jpeg', .7);
+            if (data === 'data:,') throw new Error('Canvas export failed');
+            resolve(data);
+          } catch (error) { reject(error); }
         };
+        img.onerror = () => { clearTimeout(timeout); URL.revokeObjectURL(img.src); reject(new Error('Image decode failed')); };
         img.src = URL.createObjectURL(file);
       });
     }
 
-    function save() {
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(entries.slice(0, 30))); }
-      catch { alert('本地存储已满，请删除一些旧照片。'); }
+    function openDiaryDb() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open('little-keeps-diary', 1);
+        request.onupgradeneeded = () => request.result.createObjectStore('journal');
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    async function save() {
+      const db = await openDiaryDb();
+      await new Promise((resolve, reject) => {
+        const transaction = db.transaction('journal', 'readwrite');
+        transaction.objectStore('journal').put(entries.slice(0, 100), 'entries');
+        transaction.oncomplete = resolve;
+        transaction.onerror = () => reject(transaction.error);
+        transaction.onabort = () => reject(transaction.error);
+      });
+      db.close();
+      localStorage.removeItem(STORAGE_KEY);
+    }
+
+    async function loadSavedEntries() {
+      try {
+        const db = await openDiaryDb();
+        const saved = await new Promise((resolve, reject) => {
+          const request = db.transaction('journal').objectStore('journal').get('entries');
+          request.onsuccess = () => resolve(request.result);
+          request.onerror = () => reject(request.error);
+        });
+        db.close();
+        if (saved?.length) entries = saved;
+        else if (entries.length) await save();
+        render();
+      } catch (error) { console.warn('Diary storage unavailable:', error); }
     }
 
     function getPages() { return [...new Set([todayKey, ...entries.map(e => e.date)])].sort().reverse(); }
@@ -330,6 +384,7 @@
     document.addEventListener('keydown', event => { if (event.key === 'Escape') closePhoto(); });
     if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
     render();
+    loadSavedEntries();
   </script>
 </body>
 </html>
