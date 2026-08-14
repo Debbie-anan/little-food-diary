@@ -392,6 +392,7 @@
         throw rowError;
       }
       await cacheThumbnail(path, thumbnail);
+      await cacheFullPhoto(path, dataUrl);
       return { id: row.id, data: dataUrl, thumbnail, date: row.entry_date, time: row.entry_time, mealType: row.moment_type, storagePath: path };
     }
 
@@ -417,7 +418,11 @@
       if (!thumbnail) {
         try { thumbnail = await blobToDataUrl(await fetchPrivatePhoto(thumbnailPath(entry.storagePath))); }
         catch {
-          const fullData = await blobToDataUrl(await fetchPrivatePhoto(entry.storagePath));
+          let fullData = await getCachedFullPhoto(entry.storagePath);
+          if (!fullData) {
+            fullData = await blobToDataUrl(await fetchPrivatePhoto(entry.storagePath));
+            await cacheFullPhoto(entry.storagePath, fullData);
+          }
           thumbnail = await makeThumbnail(fullData);
           const blob = await fetch(thumbnail).then(response => response.blob());
           await cloud.storage.from('journal-photos').upload(thumbnailPath(entry.storagePath), blob, { contentType:'image/jpeg', cacheControl:'86400', upsert:false });
@@ -485,10 +490,29 @@
       db.close();
     }
 
+    async function getCachedFullPhoto(path) {
+      const db = await openDiaryDb();
+      const value = await new Promise((resolve, reject) => {
+        const request = db.transaction('photos').objectStore('photos').get(`full:${path}`);
+        request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error);
+      });
+      db.close(); return value;
+    }
+
+    async function cacheFullPhoto(path, data) {
+      const db = await openDiaryDb();
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction('photos', 'readwrite'); tx.objectStore('photos').put(data, `full:${path}`);
+        tx.oncomplete = resolve; tx.onerror = () => reject(tx.error);
+      });
+      db.close();
+    }
+
     async function removeCachedThumbnail(path) {
       const db = await openDiaryDb();
       await new Promise(resolve => {
-        const tx = db.transaction('photos', 'readwrite'); tx.objectStore('photos').delete(path); tx.oncomplete = resolve;
+        const tx = db.transaction('photos', 'readwrite');
+        tx.objectStore('photos').delete(path); tx.objectStore('photos').delete(`full:${path}`); tx.oncomplete = resolve;
       });
       db.close();
     }
@@ -665,9 +689,11 @@
         document.body.classList.add('photo-open');
         if (!entry.data) {
           try {
-            const { data, error } = await cloud.storage.from('journal-photos').createSignedUrl(entry.storagePath, 3600);
-            if (error) throw error;
-            entry.data = data.signedUrl;
+            entry.data = await getCachedFullPhoto(entry.storagePath);
+            if (!entry.data) {
+              entry.data = await blobToDataUrl(await fetchPrivatePhoto(entry.storagePath));
+              await cacheFullPhoto(entry.storagePath, entry.data);
+            }
             if ($('#lightbox').classList.contains('open')) $('#lightboxPhoto').src = entry.data;
           } catch (error) { console.warn('Full photo load failed:', error); alert(copy[language].storageError); closePhoto(); }
         }
@@ -695,6 +721,7 @@
     $('#lightbox').onclick = event => { if (event.target === $('#lightbox')) closePhoto(); };
     document.addEventListener('keydown', event => { if (event.key === 'Escape') closePhoto(); });
     if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+    if (navigator.storage?.persist) navigator.storage.persist().catch(() => {});
     render();
     (async () => { await loadSavedEntries(); await initCloud(); })();
   </script>

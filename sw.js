@@ -1,4 +1,4 @@
-const CACHE = 'little-food-diary-v10';
+const CACHE = 'little-food-diary-v11';
 const ASSETS = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', event => {
