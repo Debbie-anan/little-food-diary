@@ -228,6 +228,7 @@
         <button class="auth-mode" id="recoverMode" type="button">已有邮箱账号？设置或忘记密码</button>
       </form>
       <p class="auth-status" id="authStatus"></p>
+      <button class="auth-submit" id="changePasswordBtn" type="button" hidden>设置或修改密码</button>
       <button class="signout-btn" id="signoutBtn" hidden>退出登录</button>
     </div>
   </div>
@@ -237,6 +238,7 @@
     const STORAGE_KEY = 'little-food-diary-v1';
     const SUPABASE_URL = 'https://psizjjyvexytaaaetsne.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_Xaxr8xSsBh44pd8CJDBDSw_kh92RR9I';
+    const arrivedForPasswordRecovery = location.hash.includes('type=recovery') || new URLSearchParams(location.search).get('type') === 'recovery';
     const authStorage = {
       getItem: key => (localStorage.getItem('remember-cloud-login') !== 'false' ? localStorage : sessionStorage).getItem(key),
       setItem: (key, value) => (localStorage.getItem('remember-cloud-login') !== 'false' ? localStorage : sessionStorage).setItem(key, value),
@@ -430,6 +432,7 @@
     $('#rememberLogin').checked = localStorage.getItem('remember-cloud-login') !== 'false';
     $('#authMode').onclick = () => { authMode = authMode === 'signin' ? 'signup' : 'signin'; updateAccountUi(); };
     $('#recoverMode').onclick = () => { authMode = authMode === 'recover' ? 'signin' : 'recover'; $('#authStatus').textContent = ''; updateAccountUi(); };
+    $('#changePasswordBtn').onclick = () => { authMode = 'update'; $('#authStatus').textContent = language === 'zh' ? '请输入至少 6 位新密码。' : 'Choose a new password with at least 6 characters.'; updateAccountUi(); };
     $('#authForm').onsubmit = async event => {
       event.preventDefault();
       const button = $('#authSubmit'), email = $('#emailInput').value.trim(), password = $('#passwordInput').value;
@@ -461,6 +464,7 @@
       $('#authForm').hidden = !!currentUser;
       if (authMode === 'update') $('#authForm').hidden = false;
       $('#signoutBtn').hidden = !currentUser;
+      $('#changePasswordBtn').hidden = !currentUser || authMode === 'update';
       $('#authIntro').textContent = currentUser
         ? currentUser.email
         : (language === 'zh' ? '使用邮箱和密码登录，照片只对你可见。' : 'Sign in with email and password. Your photos stay private.');
@@ -477,13 +481,19 @@
       $('.remember-row').hidden = authMode === 'recover' || authMode === 'update';
       $('#authMode').hidden = authMode === 'recover' || authMode === 'update';
       $('#recoverMode').hidden = authMode === 'update';
+      $('#changePasswordBtn').textContent = language === 'zh' ? '设置或修改密码' : 'Set or change password';
       $('#rememberLabel').textContent = language === 'zh' ? '记住登录状态' : 'Remember me';
     }
 
     async function initCloud() {
       const { data: { session } } = await cloud.auth.getSession();
       currentUser = session?.user || null;
+      if (arrivedForPasswordRecovery && currentUser) authMode = 'update';
       updateAccountUi();
+      if (authMode === 'update') {
+        $('#authStatus').textContent = language === 'zh' ? '请输入至少 6 位新密码。' : 'Choose a new password with at least 6 characters.';
+        openAuth();
+      }
       if (currentUser) { await migrateLocalEntries(); if (!localEntries.length) await loadCloudEntries(); }
       cloud.auth.onAuthStateChange((event, session) => {
         currentUser = session?.user || null;
