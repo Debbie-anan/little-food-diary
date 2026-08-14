@@ -1,7 +1,7 @@
 {
-  "name": "今日好好吃 · Little Food Diary",
-  "short_name": "好好吃",
-  "description": "一本简洁可爱的每日饮食照片手账。",
+  "name": "小小值得 · Little Keeps",
+  "short_name": "小小值得",
+  "description": "一本收藏日常趣事与值得记录瞬间的彩色照片手账。",
   "lang": "zh-CN",
   "start_url": "./",
   "scope": "./",
