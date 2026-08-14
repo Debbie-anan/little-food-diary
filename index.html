@@ -120,6 +120,7 @@
     .meal-card { opacity: 0; animation: arrive .55s cubic-bezier(.2,.8,.2,1) forwards; }
     .photo-wrap { position: relative; aspect-ratio: 4/3; overflow: hidden; border: 1.5px solid var(--ink); border-radius: 24px 20px 28px 18px; background: #efe6d6; box-shadow: 5px 6px 0 var(--ink); cursor: zoom-in; }
     .photo-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s ease; }
+    .photo-wrap.loading::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 25%, rgba(255,255,255,.65) 45%, transparent 65%); animation: photoShimmer 1.25s linear infinite; transform: translateX(-100%); }
     .meal-card:hover img { transform: scale(1.04) rotate(.5deg); }
     .tag { position: absolute; top: 13px; left: 13px; padding: 6px 10px; border-radius: 99px; background: var(--card); font-size: 11px; font-weight: 900; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
     .delete { position: absolute; top: 11px; right: 11px; width: 30px; height: 30px; border: 0; border-radius: 50%; background: rgba(48,45,43,.8); color: white; opacity: 0; transition: .2s; }
@@ -154,6 +155,7 @@
 
     @keyframes arrive { from { transform: translateY(18px) rotate(-1deg); } to { opacity: 1; transform: none; } }
     @keyframes installPop { from { opacity: 0; transform: scale(.7) rotate(-5deg); } to { opacity: 1; transform: none; } }
+    @keyframes photoShimmer { to { transform: translateX(100%); } }
     @media (max-width: 760px) {
       .shell { width: min(100% - 26px, 600px); padding-top: 18px; }
       nav { margin-bottom: 42px; }
@@ -293,13 +295,15 @@
       if (!currentUser) { openAuth(); return; }
       if (!entries.length || !confirm(copy[language].confirm)) return;
       try {
-        const paths = entries.map(entry => entry.storagePath).filter(Boolean);
+        const mainPaths = entries.map(entry => entry.storagePath).filter(Boolean);
+        const paths = mainPaths.flatMap(path => [path, thumbnailPath(path)]);
         if (paths.length) {
           const { error: storageError } = await cloud.storage.from('journal-photos').remove(paths);
           if (storageError) throw storageError;
         }
         const { error } = await cloud.from('journal_entries').delete().eq('user_id', currentUser.id);
         if (error) throw error;
+        await Promise.all(mainPaths.map(removeCachedThumbnail));
         entries = []; render();
       } catch (error) { console.error(error); alert(copy[language].storageError); }
     };
@@ -334,15 +338,48 @@
       });
     }
 
+    function makeThumbnail(dataUrl) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const max = 520, scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+            canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+            canvas.getContext('2d', { alpha: false }).drawImage(img, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL('image/jpeg', .72));
+          } catch (error) { reject(error); }
+        };
+        img.onerror = () => reject(new Error('Thumbnail creation failed'));
+        img.src = dataUrl;
+      });
+    }
+
+    const thumbnailPath = path => {
+      const parts = path.split('/'), file = parts.pop();
+      return `${parts[0]}/thumbs/${file}`;
+    };
+    const blobToDataUrl = blob => new Promise((resolve, reject) => {
+      const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(blob);
+    });
+
     async function uploadCloudEntry(dataUrl, meta) {
       if (!currentUser) throw new Error('Login required');
       const id = crypto.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
       const path = `${currentUser.id}/${id}.jpg`;
+      const thumbPath = thumbnailPath(path);
       const blob = await fetch(dataUrl).then(response => response.blob());
       const { error: uploadError } = await cloud.storage.from('journal-photos').upload(path, blob, {
         contentType: 'image/jpeg', cacheControl: '3600', upsert: false
       });
       if (uploadError) throw uploadError;
+      const thumbnail = await makeThumbnail(dataUrl);
+      const thumbBlob = await fetch(thumbnail).then(response => response.blob());
+      const { error: thumbError } = await cloud.storage.from('journal-photos').upload(thumbPath, thumbBlob, {
+        contentType: 'image/jpeg', cacheControl: '86400', upsert: false
+      });
+      if (thumbError) console.warn('Thumbnail upload failed:', thumbError);
       const { data: row, error: rowError } = await cloud.from('journal_entries').insert({
         user_id: currentUser.id,
         storage_path: path,
@@ -354,19 +391,53 @@
         await cloud.storage.from('journal-photos').remove([path]);
         throw rowError;
       }
-      return { id: row.id, data: dataUrl, date: row.entry_date, time: row.entry_time, mealType: row.moment_type, storagePath: path };
+      await cacheThumbnail(path, thumbnail);
+      return { id: row.id, data: dataUrl, thumbnail, date: row.entry_date, time: row.entry_time, mealType: row.moment_type, storagePath: path };
     }
 
     async function loadCloudEntries() {
       if (!currentUser) return;
       const { data: rows, error } = await cloud.from('journal_entries').select('*').order('created_at', { ascending: false });
       if (error) throw error;
-      entries = await Promise.all(rows.map(async row => {
-        const { data, error: urlError } = await cloud.storage.from('journal-photos').createSignedUrl(row.storage_path, 86400);
-        if (urlError) throw urlError;
-        return { id: row.id, data: data.signedUrl, date: row.entry_date, time: row.entry_time, mealType: row.moment_type, storagePath: row.storage_path };
-      }));
+      entries = rows.map(row => ({ id: row.id, data: '', thumbnail: '', date: row.entry_date, time: row.entry_time, mealType: row.moment_type, storagePath: row.storage_path }));
       pageIndex = 0; render();
+      hydrateThumbnails(entries);
+    }
+
+    async function fetchPrivatePhoto(path) {
+      const { data, error } = await cloud.storage.from('journal-photos').createSignedUrl(path, 3600);
+      if (error) throw error;
+      const response = await fetch(data.signedUrl);
+      if (!response.ok) throw new Error(`Photo download failed: ${response.status}`);
+      return response.blob();
+    }
+
+    async function hydrateThumbnail(entry) {
+      let thumbnail = await getCachedThumbnail(entry.storagePath);
+      if (!thumbnail) {
+        try { thumbnail = await blobToDataUrl(await fetchPrivatePhoto(thumbnailPath(entry.storagePath))); }
+        catch {
+          const fullData = await blobToDataUrl(await fetchPrivatePhoto(entry.storagePath));
+          thumbnail = await makeThumbnail(fullData);
+          const blob = await fetch(thumbnail).then(response => response.blob());
+          await cloud.storage.from('journal-photos').upload(thumbnailPath(entry.storagePath), blob, { contentType:'image/jpeg', cacheControl:'86400', upsert:false });
+        }
+        await cacheThumbnail(entry.storagePath, thumbnail);
+      }
+      entry.thumbnail = thumbnail;
+      const wrap = document.querySelector(`.photo-wrap[data-entry-id="${entry.id}"]`);
+      if (wrap) { const img = wrap.querySelector('img'); img.src = thumbnail; wrap.classList.remove('loading'); }
+    }
+
+    async function hydrateThumbnails(items) {
+      let cursor = 0;
+      const worker = async () => {
+        while (cursor < items.length) {
+          const entry = items[cursor++];
+          try { await hydrateThumbnail(entry); } catch (error) { console.warn('Thumbnail load failed:', error); }
+        }
+      };
+      await Promise.all(Array.from({ length: Math.min(3, items.length) }, worker));
     }
 
     async function migrateLocalEntries() {
@@ -379,7 +450,6 @@
       }
       localEntries = remaining;
       await saveLocalEntries(remaining);
-      await loadCloudEntries();
       $('#authStatus').textContent = remaining.length
         ? (language === 'zh' ? `${remaining.length} 张旧照片迁移失败，请稍后重新登录重试。` : `${remaining.length} photos could not be moved. Try again later.`)
         : (language === 'zh' ? '旧照片已安全迁移到云端。' : 'Local photos are now safely in the cloud.');
@@ -387,11 +457,40 @@
 
     function openDiaryDb() {
       return new Promise((resolve, reject) => {
-        const request = indexedDB.open('little-keeps-diary', 1);
-        request.onupgradeneeded = () => request.result.createObjectStore('journal');
+        const request = indexedDB.open('little-keeps-diary', 2);
+        request.onupgradeneeded = () => {
+          if (!request.result.objectStoreNames.contains('journal')) request.result.createObjectStore('journal');
+          if (!request.result.objectStoreNames.contains('photos')) request.result.createObjectStore('photos');
+        };
         request.onsuccess = () => resolve(request.result);
         request.onerror = () => reject(request.error);
       });
+    }
+
+    async function getCachedThumbnail(path) {
+      const db = await openDiaryDb();
+      const value = await new Promise((resolve, reject) => {
+        const request = db.transaction('photos').objectStore('photos').get(path);
+        request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error);
+      });
+      db.close(); return value;
+    }
+
+    async function cacheThumbnail(path, data) {
+      const db = await openDiaryDb();
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction('photos', 'readwrite'); tx.objectStore('photos').put(data, path);
+        tx.oncomplete = resolve; tx.onerror = () => reject(tx.error);
+      });
+      db.close();
+    }
+
+    async function removeCachedThumbnail(path) {
+      const db = await openDiaryDb();
+      await new Promise(resolve => {
+        const tx = db.transaction('photos', 'readwrite'); tx.objectStore('photos').delete(path); tx.oncomplete = resolve;
+      });
+      db.close();
     }
 
     async function saveLocalEntries(values) {
@@ -494,12 +593,12 @@
         $('#authStatus').textContent = language === 'zh' ? '请输入至少 6 位新密码。' : 'Choose a new password with at least 6 characters.';
         openAuth();
       }
-      if (currentUser) { await migrateLocalEntries(); if (!localEntries.length) await loadCloudEntries(); }
+      if (currentUser) { await migrateLocalEntries(); await loadCloudEntries(); }
       cloud.auth.onAuthStateChange((event, session) => {
         currentUser = session?.user || null;
         if (event === 'PASSWORD_RECOVERY') { authMode = 'update'; openAuth(); }
         updateAccountUi();
-        if (event === 'SIGNED_IN') setTimeout(async () => { await migrateLocalEntries(); if (!localEntries.length) await loadCloudEntries(); if (authMode !== 'update') closeAuth(); }, 0);
+        if (event === 'SIGNED_IN') setTimeout(async () => { await migrateLocalEntries(); await loadCloudEntries(); if (authMode !== 'update') closeAuth(); }, 0);
         if (event === 'SIGNED_OUT') { entries = []; render(); }
       });
     }
@@ -536,8 +635,8 @@
       }
       $('#meals').innerHTML = pageEntries.map((e, i) => `
         <article class="meal-card" style="animation-delay:${i * .07}s">
-          <div class="photo-wrap">
-            <img src="${e.data}" alt="life journal photo" />
+          <div class="photo-wrap ${e.thumbnail || e.data ? '' : 'loading'}" data-entry-id="${e.id}">
+            <img ${e.thumbnail || e.data ? `src="${e.thumbnail || e.data}"` : ''} loading="lazy" decoding="async" alt="life journal photo" />
             <span class="tag">${c.meals[e.mealType ?? 1]}</span>
             <button class="delete" data-id="${e.id}" aria-label="delete">×</button>
           </div>
@@ -548,20 +647,30 @@
         if (!entry || !currentUser) return;
         btn.disabled = true;
         try {
-          const { error: storageError } = await cloud.storage.from('journal-photos').remove([entry.storagePath]);
+          const { error: storageError } = await cloud.storage.from('journal-photos').remove([entry.storagePath, thumbnailPath(entry.storagePath)]);
           if (storageError) throw storageError;
           const { error } = await cloud.from('journal_entries').delete().eq('id', entry.id);
           if (error) throw error;
+          await removeCachedThumbnail(entry.storagePath);
           entries = entries.filter(item => item.id !== entry.id); render();
         } catch (error) { console.error(error); btn.disabled = false; alert(copy[language].storageError); }
       });
-      document.querySelectorAll('.photo-wrap').forEach(wrap => wrap.onclick = event => {
+      document.querySelectorAll('.photo-wrap').forEach(wrap => wrap.onclick = async event => {
         if (event.target.closest('.delete')) return;
-        const photo = wrap.querySelector('img');
-        $('#lightboxPhoto').src = photo.src;
-        $('#lightboxPhoto').alt = photo.alt;
+        const entry = entries.find(item => item.id === wrap.dataset.entryId);
+        if (!entry) return;
+        $('#lightboxPhoto').src = entry.data || entry.thumbnail || '';
+        $('#lightboxPhoto').alt = 'life journal photo';
         $('#lightbox').classList.add('open');
         document.body.classList.add('photo-open');
+        if (!entry.data) {
+          try {
+            const { data, error } = await cloud.storage.from('journal-photos').createSignedUrl(entry.storagePath, 3600);
+            if (error) throw error;
+            entry.data = data.signedUrl;
+            if ($('#lightbox').classList.contains('open')) $('#lightboxPhoto').src = entry.data;
+          } catch (error) { console.warn('Full photo load failed:', error); alert(copy[language].storageError); closePhoto(); }
+        }
       });
     }
 
