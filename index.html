@@ -70,7 +70,7 @@
     .account-btn { padding: 9px 14px; border: 1.5px solid var(--ink); border-radius: 99px; color: var(--ink); background: var(--yolk); font-weight: 700; font-size: 14px; box-shadow: 2px 3px 0 var(--ink); }
     .account-btn.signed-in { background: var(--matcha); }
 
-    .hero { display: grid; grid-template-columns: 1.12fr .88fr; align-items: center; gap: 72px; margin-bottom: 74px; }
+    .hero { display: grid; grid-template-columns: 1.35fr .65fr; align-items: center; gap: 96px; margin-bottom: 110px; }
     .eyebrow { color: var(--berry-dark); font-weight: 700; font-size: 15px; letter-spacing: .13em; text-transform: uppercase; transform: rotate(-1deg); transform-origin: left; }
     h1 { margin: 10px 0 18px; font-family: "Long Cang", "Patrick Hand", cursive; font-size: clamp(64px, 8vw, 105px); line-height: .92; letter-spacing: .01em; font-weight: 400; transform: rotate(-.6deg); transform-origin: left; }
     h1 span { position: relative; color: var(--berry); font-family: "Long Cang", "Patrick Hand", cursive; font-weight: 400; letter-spacing: .02em; }
@@ -83,22 +83,24 @@
     .stat span { color: var(--muted); font-size: 15px; }
 
     .upload-card {
-      position: relative; overflow: hidden; min-height: 372px; padding: 24px;
-      display: flex; flex-direction: column; justify-content: flex-end;
-      border: 2px solid var(--ink); border-radius: 38px 32px 40px 28px;
-      background: var(--matcha); box-shadow: 10px 12px 0 var(--ink);
+      position: relative; min-height: 230px; padding: 28px 22px 22px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px;
+      border: 2px solid var(--ink); border-radius: 42% 48% 44% 50%;
+      background: rgba(138,191,121,.78); box-shadow: 8px 9px 0 var(--ink);
       transform: rotate(1.4deg); transition: transform .25s ease;
     }
     .upload-card:hover { transform: rotate(0deg) translateY(-3px); }
     .doodle { position: absolute; font-family: "Long Cang", "Patrick Hand", cursive; color: rgba(48,45,43,.78); }
-    .doodle.one { top: 24px; left: 26px; font-size: 28px; transform: rotate(-8deg); }
-    .doodle.two { right: 28px; top: 35px; font-size: 50px; transform: rotate(12deg); }
-    .plate { position: absolute; width: 180px; height: 180px; left: 50%; top: 46%; transform: translate(-50%,-50%); border: 18px solid #f8f0df; border-radius: 50%; background: #fffaf0; box-shadow: 0 8px 0 rgba(48,45,43,.13); }
-    .plate::before { content: "📷"; position: absolute; inset: 0; display: grid; place-items: center; font-size: 68px; transform: rotate(-8deg); filter: saturate(.85); }
-    .upload-btn { position: relative; z-index: 2; border: 2px solid var(--ink); border-radius: 18px; padding: 17px 20px; color: #fff; background: var(--ink); font-weight: 900; box-shadow: 0 5px 0 rgba(255,255,255,.4); transition: .2s ease; }
+    .doodle.one { position: static; font-size: 23px; text-align: center; transform: rotate(-3deg); }
+    .doodle.two { right: 18px; top: 16px; font-size: 30px; transform: rotate(12deg); }
+    .upload-btn { position: relative; z-index: 2; width: 86px; height: 86px; display: grid; place-items: center; border: 2px solid var(--ink); border-radius: 50% 46% 52% 48%; padding: 0; color: #fff; background: var(--ink); box-shadow: 5px 6px 0 rgba(255,255,255,.55); transition: .2s ease; }
+    .upload-btn svg { width: 42px; height: 42px; }
     .upload-btn:hover { background: var(--berry); transform: translateY(-2px); }
     .upload-btn:disabled { cursor: wait; opacity: .72; transform: none; }
-    #fileInput { display: none; }
+    .upload-btn.busy svg { animation: cameraBusy .9s ease-in-out infinite alternate; }
+    .gallery-btn { border: 0; padding: 5px 10px; color: var(--ink); background: transparent; font-size: 15px; text-decoration: underline; text-underline-offset: 4px; }
+    #fileInput, #cameraInput { display: none; }
+    .moment-card input[type="datetime-local"] { width: 100%; padding: 13px 14px; border: 1.5px solid var(--ink); border-radius: 14px; background: #fff; color: var(--ink); font-size: 17px; }
 
     .notebook { position: relative; padding: 34px 34px 30px 52px; border: 1px solid #dfd2bf; border-radius: 12px 26px 26px 12px; background: repeating-linear-gradient(to bottom, #fffdf8 0, #fffdf8 37px, #eadfcd 38px); box-shadow: 10px 12px 0 #dfcdb5, var(--shadow); min-height: 360px; }
     .notebook::before { content: ""; position: absolute; left: 23px; top: 0; bottom: 0; width: 2px; background: rgba(255,109,118,.28); }
@@ -156,12 +158,13 @@
     @keyframes arrive { from { transform: translateY(18px) rotate(-1deg); } to { opacity: 1; transform: none; } }
     @keyframes installPop { from { opacity: 0; transform: scale(.7) rotate(-5deg); } to { opacity: 1; transform: none; } }
     @keyframes photoShimmer { to { transform: translateX(100%); } }
+    @keyframes cameraBusy { to { transform: scale(.82) rotate(-7deg); opacity: .55; } }
     @media (max-width: 760px) {
       .shell { width: min(100% - 26px, 600px); padding-top: 18px; }
       nav { margin-bottom: 42px; }
-      .hero { grid-template-columns: 1fr; gap: 42px; margin-bottom: 58px; }
+      .hero { grid-template-columns: 1fr; gap: 64px; margin-bottom: 86px; }
       h1 { font-size: clamp(54px, 18vw, 78px); }
-      .upload-card { min-height: 330px; }
+      .upload-card { width: min(260px, 78%); min-height: 220px; justify-self: center; }
       .meals { grid-template-columns: 1fr 1fr; }
       .notebook { padding: 30px 20px 28px 40px; }
     }
@@ -193,8 +196,11 @@
 
       <div class="upload-card">
         <div class="doodle one" id="doodleText">今天，什么值得记住？</div><div class="doodle two">✦</div>
-        <div class="plate"></div>
-        <button class="upload-btn" id="uploadBtn">收藏这个瞬间 · 上传照片</button>
+        <button class="upload-btn" id="uploadBtn" aria-label="拍照">
+          <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M7 16h8l3-5h12l3 5h8a3 3 0 0 1 3 3v19a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V19a3 3 0 0 1 3-3Z"/><circle cx="24" cy="28" r="8" fill="none" stroke="currentColor" stroke-width="3"/></svg>
+        </button>
+        <button class="gallery-btn" id="galleryBtn">从相册选择</button>
+        <input id="cameraInput" type="file" accept="image/*" capture="environment" />
         <input id="fileInput" type="file" accept="image/*" multiple />
       </div>
     </section>
@@ -235,6 +241,18 @@
     </div>
   </div>
 
+  <div class="auth-modal" id="momentModal" role="dialog" aria-modal="true">
+    <div class="auth-card moment-card">
+      <button class="auth-close" id="momentClose" aria-label="Close">×</button>
+      <h2 id="momentTitle">这个瞬间发生在？</h2>
+      <p id="momentIntro">选择照片对应的日期和具体时间。</p>
+      <form id="momentForm">
+        <input id="momentTime" type="datetime-local" required />
+        <button class="auth-submit" id="momentSubmit" type="submit">保存这个瞬间</button>
+      </form>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const STORAGE_KEY = 'little-food-diary-v1';
@@ -264,31 +282,52 @@
     // Upgrade entries saved by the earlier single-day version.
     entries = entries.map(e => ({...e, date: /^\d{4}-\d{2}-\d{2}$/.test(e.date) ? e.date : todayKey}));
     $('#langBtn').onclick = () => { language = language === 'zh' ? 'en' : 'zh'; localStorage.setItem('food-diary-language', language); render(); };
-    $('#uploadBtn').onclick = () => currentUser ? $('#fileInput').click() : openAuth();
-    $('#fileInput').onchange = async (event) => {
+    let pendingFiles = [];
+    const localDateTimeValue = date => `${iso(date)}T${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+    $('#uploadBtn').onclick = () => currentUser ? $('#cameraInput').click() : openAuth();
+    $('#galleryBtn').onclick = () => currentUser ? $('#fileInput').click() : openAuth();
+    const chooseMoment = event => {
       const files = [...event.target.files].filter(file => file.type.startsWith('image/') || /\.(heic|heif|jpg|jpeg|png|webp)$/i.test(file.name));
       if (!files.length) return;
-      const button = $('#uploadBtn');
-      button.disabled = true; button.textContent = copy[language].uploading;
+      pendingFiles = files;
+      $('#momentTime').value = localDateTimeValue(new Date());
+      $('#momentModal').classList.add('open');
+      event.target.value = '';
+    };
+    $('#fileInput').onchange = chooseMoment;
+    $('#cameraInput').onchange = chooseMoment;
+    $('#momentClose').onclick = () => { pendingFiles = []; $('#momentModal').classList.remove('open'); };
+    $('#momentModal').onclick = event => { if (event.target === $('#momentModal')) $('#momentClose').click(); };
+    $('#momentForm').onsubmit = async event => {
+      event.preventDefault();
+      if (!pendingFiles.length) return;
+      const chosen = new Date($('#momentTime').value);
+      if (Number.isNaN(chosen.getTime())) return;
+      const chosenDate = iso(chosen);
+      const button = $('#uploadBtn'), submit = $('#momentSubmit');
+      button.disabled = true; button.classList.add('busy'); submit.disabled = true;
+      submit.textContent = copy[language].uploading;
       let added = 0;
-      for (const file of files) {
+      for (const file of pendingFiles) {
         try {
           const data = await compressImage(file);
           const entry = await uploadCloudEntry(data, {
-            date: todayKey,
-            time: new Date().toLocaleTimeString(language === 'zh' ? 'zh-CN' : 'en-US', {hour:'2-digit', minute:'2-digit'}),
-            mealType: mealType()
+            date: chosenDate,
+            time: chosen.toLocaleTimeString(language === 'zh' ? 'zh-CN' : 'en-US', {hour:'2-digit', minute:'2-digit'}),
+            mealType: mealType(chosen)
           });
           entries.unshift(entry);
           added++;
         } catch (error) { console.warn('Photo upload failed:', file.name, error); }
       }
-      event.target.value = '';
+      pendingFiles = [];
       if (added) {
-        pageIndex = 0;
+        pageIndex = getPages().indexOf(chosenDate);
+        $('#momentModal').classList.remove('open');
         render(); showToast();
       } else { alert(copy[language].uploadError); }
-      button.disabled = false; button.textContent = copy[language].upload;
+      button.disabled = false; button.classList.remove('busy'); submit.disabled = false;
+      submit.textContent = language === 'zh' ? '保存这个瞬间' : 'Save this moment';
     };
 
     $('#clearBtn').onclick = async () => {
@@ -311,8 +350,8 @@
     $('#prevPage').onclick = () => { pageIndex = Math.min(pageIndex + 1, getPages().length - 1); render(); };
     $('#nextPage').onclick = () => { pageIndex = Math.max(pageIndex - 1, 0); render(); };
 
-    function mealType() {
-      const h = new Date().getHours();
+    function mealType(date = new Date()) {
+      const h = date.getHours();
       return h < 10 ? 0 : h < 14 ? 1 : h < 17 ? 2 : 3;
     }
 
@@ -644,7 +683,12 @@
       $('#today').textContent = formatDate(todayKey, true);
       $('#heroTitle').innerHTML = c.title; $('#intro').textContent = c.intro;
       $('#todayLabel').textContent = c.today; $('#totalLabel').textContent = c.total;
-      $('#doodleText').textContent = c.doodle; $('#uploadBtn').textContent = c.upload;
+      $('#doodleText').textContent = c.doodle;
+      $('#uploadBtn').setAttribute('aria-label', language === 'zh' ? '打开相机拍照' : 'Open camera');
+      $('#galleryBtn').textContent = language === 'zh' ? '从相册选择' : 'Choose from gallery';
+      $('#momentTitle').textContent = language === 'zh' ? '这个瞬间发生在？' : 'When did this happen?';
+      $('#momentIntro').textContent = language === 'zh' ? '选择照片对应的日期和具体时间。' : 'Choose the exact date and time for this photo.';
+      if (!$('#momentSubmit').disabled) $('#momentSubmit').textContent = language === 'zh' ? '保存这个瞬间' : 'Save this moment';
       updateAccountUi();
       $('#installBtn span').textContent = c.install;
       $('#pageDate').textContent = formatDate(activeDate); $('#pageSubtitle').textContent = c.subtitle;
