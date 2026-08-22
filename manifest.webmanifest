@@ -3,17 +3,25 @@
   "short_name": "小小值得",
   "description": "一本收藏日常趣事与值得记录瞬间的彩色照片手账。",
   "lang": "zh-CN",
-  "start_url": "./",
-  "scope": "./",
+  "id": "/little-food-diary/",
+  "start_url": "/little-food-diary/",
+  "scope": "/little-food-diary/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "any",
   "background_color": "#fff9ed",
   "theme_color": "#ff6d76",
   "icons": [
     {
-      "src": "icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]
