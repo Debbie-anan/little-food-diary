@@ -126,7 +126,6 @@
     .photo-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s ease; }
     .photo-wrap.loading::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 25%, rgba(255,255,255,.65) 45%, transparent 65%); animation: photoShimmer 1.25s linear infinite; transform: translateX(-100%); }
     .meal-card:hover img { transform: scale(1.04) rotate(.5deg); }
-    .tag { position: absolute; top: 9px; left: 9px; max-width: calc(100% - 46px); overflow: hidden; padding: 4px 8px; border-radius: 99px; background: rgba(255,253,248,.9); font-size: 10px; font-weight: 900; white-space: nowrap; text-overflow: ellipsis; box-shadow: 0 2px 8px rgba(0,0,0,.1); backdrop-filter: blur(5px); }
     .delete { position: absolute; top: 8px; right: 8px; width: 27px; height: 27px; border: 0; border-radius: 50%; background: rgba(48,45,43,.8); color: white; opacity: 0; transition: .2s; }
     .meal-card:hover .delete { opacity: 1; }
     .caption { display: flex; justify-content: space-between; align-items: center; gap: 5px; padding: 9px 3px 0; }
@@ -181,7 +180,6 @@
       .section-head p { font-size: 14px; }
       .meals { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px 9px; }
       .photo-wrap { border-radius: 14px 11px 16px 10px; box-shadow: 3px 4px 0 var(--ink); }
-      .tag { top: 6px; left: 6px; max-width: calc(100% - 40px); padding: 3px 6px; font-size: 9px; }
       .delete { top: 5px; right: 5px; width: 24px; height: 24px; opacity: .82; }
       .caption { padding-top: 7px; }
       .caption strong { display: none; }
@@ -720,7 +718,6 @@
         <article class="meal-card" style="animation-delay:${i * .07}s">
           <div class="photo-wrap ${e.thumbnail || e.data ? '' : 'loading'}" data-entry-id="${e.id}">
             <img ${e.thumbnail || e.data ? `src="${e.thumbnail || e.data}"` : ''} loading="lazy" decoding="async" alt="life journal photo" />
-            <span class="tag">${c.meals[e.mealType ?? 1]}</span>
             <button class="delete" data-id="${e.id}" aria-label="delete">×</button>
           </div>
           <div class="caption"><strong>${c.caption}</strong><time>${e.time}</time></div>
