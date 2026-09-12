@@ -6,11 +6,11 @@
   <meta name="theme-color" content="#fff9ed" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="小小值得" />
+  <meta name="apple-mobile-web-app-title" content="Memorable" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="icon-192.png" />
-  <title>小小值得 · 生活照片手账</title>
+  <title>Memorable · 生活照片手账</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Long+Cang&family=Ma+Shan+Zheng&family=Patrick+Hand&display=swap');
 
@@ -205,7 +205,7 @@
 <body>
   <main class="shell">
     <nav>
-      <div class="brand"><div class="brand-mark">✿</div><span>小小值得</span></div>
+      <div class="brand"><div class="brand-mark">✿</div><span>Memorable</span></div>
       <div class="nav-actions"><div class="date-pill" id="today"></div><button class="install-btn" id="installBtn">⇩ <span>安装 App</span></button><button class="account-btn" id="accountBtn">云端登录</button><button class="lang-btn" id="langBtn">EN</button></div>
     </nav>
 
@@ -305,8 +305,8 @@
     let timesHidden = localStorage.getItem('little-keeps-hide-times') === 'true';
 
     const copy = {
-      zh: { brand:'小小值得', title:'把今天的<br><span>小小值得</span>留下', intro:'一顿好吃的、一朵奇怪的云、路上遇见的小狗……把让你笑了一下的瞬间，都收进这本生活手账。', today:'今日收藏', total:'全部瞬间', doodle:'今天，什么值得记住？', upload:'收藏这个瞬间 · 上传照片', uploading:'正在保存到云端…', install:'安装 App', login:'云端登录', loggedIn:'云端已连接', subtitle:'今天有什么，让你想多看一眼？', clear:'清空记录', emptyTitle:'这一页还在等故事', emptyBody:'上传一张值得记住的照片吧 ✿', caption:'今天的小小值得 ♡', page:'第 {n} / {all} 页', toast:'已安全保存到云端 ✦', uploadError:'这张照片读取或上传失败，请稍后重试。', storageError:'照片没能保存到云端，请检查网络后重试。', confirm:'要删除云端的全部生活记录吗？', meals:['清晨发现','午间一刻','下午偶遇','夜晚收藏'] },
-      en: { brand:'Little Keeps', title:'Keep the little things<br><span>worth remembering</span>', intro:'A lovely meal, a strange little cloud, a dog you met on the way… Keep every moment that made you smile in this tiny life journal.', today:"Today's keeps", total:'All moments', doodle:"What felt worth remembering?", upload:'Keep this moment · Upload photo', uploading:'Saving to cloud…', install:'Install App', login:'Cloud login', loggedIn:'Cloud connected', subtitle:'What made you stop and look today?', clear:'Clear all', emptyTitle:'This page is waiting for a story', emptyBody:'Add a moment worth remembering ✿', caption:'A little thing worth keeping ♡', page:'Page {n} / {all}', toast:'Safely saved to your cloud ✦', uploadError:'This photo could not be read or uploaded. Please try again.', storageError:'The photo could not be saved to the cloud. Check your connection.', confirm:'Delete your entire cloud journal?', meals:['Morning find','Midday moment','Afternoon sighting','Evening keep'] }
+      zh: { brand:'Memorable', title:'把今天的<br><span>小小值得</span>留下', intro:'一顿好吃的、一朵奇怪的云、路上遇见的小狗……把让你笑了一下的瞬间，都收进这本生活手账。', today:'今日收藏', total:'全部瞬间', doodle:'今天，什么值得记住？', upload:'收藏这个瞬间 · 上传照片', uploading:'正在保存到云端…', install:'安装 App', login:'云端登录', loggedIn:'云端已连接', subtitle:'今天有什么，让你想多看一眼？', clear:'清空记录', emptyTitle:'这一页还在等故事', emptyBody:'上传一张值得记住的照片吧 ✿', caption:'今天的小小值得 ♡', page:'第 {n} / {all} 页', toast:'已安全保存到云端 ✦', uploadError:'这张照片读取或上传失败，请稍后重试。', storageError:'照片没能保存到云端，请检查网络后重试。', confirm:'要删除云端的全部生活记录吗？', meals:['清晨发现','午间一刻','下午偶遇','夜晚收藏'] },
+      en: { brand:'Memorable', title:'Keep the little things<br><span>worth remembering</span>', intro:'A lovely meal, a strange little cloud, a dog you met on the way… Keep every moment that made you smile in this tiny life journal.', today:"Today's keeps", total:'All moments', doodle:"What felt worth remembering?", upload:'Keep this moment · Upload photo', uploading:'Saving to cloud…', install:'Install App', login:'Cloud login', loggedIn:'Cloud connected', subtitle:'What made you stop and look today?', clear:'Clear all', emptyTitle:'This page is waiting for a story', emptyBody:'Add a moment worth remembering ✿', caption:'A little thing worth keeping ♡', page:'Page {n} / {all}', toast:'Safely saved to your cloud ✦', uploadError:'This photo could not be read or uploaded. Please try again.', storageError:'The photo could not be saved to the cloud. Check your connection.', confirm:'Delete your entire cloud journal?', meals:['Morning find','Midday moment','Afternoon sighting','Evening keep'] }
     };
 
     // Upgrade entries saved by the earlier single-day version.
