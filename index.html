@@ -134,12 +134,16 @@
     .view-tabs button { border: 1px solid var(--ink); border-radius: 12px 14px 10px 13px; padding: 7px 12px; background: var(--card); color: var(--ink); }
     #calendarBtn { margin-left: auto; background: #e8f1df; }
     .view-tabs button[aria-pressed="true"] { background: var(--yolk); box-shadow: 2px 3px 0 var(--ink); }
-    .meals.grouped { display: block; }
-    .day-group { margin-bottom: 27px; }
-    .day-heading { display: flex; align-items: center; gap: 12px; margin: 0 0 13px; font-size: 23px; font-weight: 400; }
-    .day-heading::after { content: ''; height: 1px; background: var(--line); flex: 1; }
-    .day-heading small { color: var(--muted); font-size: 13px; }
-    .day-empty { color: var(--muted); font-size: 14px; margin: 0 0 18px; }
+    .meals.collage { height: clamp(320px, 60svh, 620px); grid-template-columns: repeat(var(--board-cols), minmax(0, 1fr)); grid-template-rows: repeat(var(--board-rows), minmax(0, 1fr)); gap: 13px; padding: 12px 5px; align-items: stretch; }
+    .collage .meal-card { min-height: 0; min-width: 0; display: flex; flex-direction: column; padding: 4px; background: var(--card); box-shadow: 1px 3px 6px #302d2b20; border: 1px solid var(--line); border-radius: 3px; opacity: 1; animation: none; transform: rotate(var(--tilt)) translateY(var(--shift)); }
+    .collage .photo-wrap { flex: 1; min-height: 0; aspect-ratio: auto; border: 0; border-radius: 2px; box-shadow: none; }
+    .collage .caption { padding: 3px 0 0; }
+    .collage .caption strong { display: none; }
+    .collage .caption time { width: 100%; text-align: center; font-size: 10px; overflow: hidden; white-space: nowrap; }
+    .collage .delete { width: 22px; height: 22px; top: 2px; right: 2px; }
+    @media (max-width: 760px) {
+      .meals.collage { grid-template-columns: repeat(var(--board-mobile-cols), minmax(0, 1fr)); grid-template-rows: repeat(var(--board-mobile-rows), minmax(0, 1fr)); gap: 9px; }
+    }
 
     .page-nav { display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 28px; }
     .page-btn { width: 42px; height: 42px; border: 1.5px solid var(--ink); border-radius: 50%; background: var(--card); box-shadow: 3px 3px 0 var(--ink); font-size: 20px; transition: .18s; }
@@ -820,31 +824,37 @@
       $('#pageDate').textContent = formatDate(activeDate); $('#pageSubtitle').textContent = c.subtitle;
       if (diaryView === 'week') $('#pageDate').textContent = `${formatDate(activeDate, true)} — ${formatDate(dates[6], true)}`;
       if (diaryView === 'month') $('#pageDate').textContent = new Intl.DateTimeFormat(language === 'zh' ? 'zh-CN' : 'en-US', {year:'numeric', month:'long'}).format(new Date(activeDate + 'T12:00:00'));
-      if (diaryView !== 'day') $('#pageSubtitle').textContent = language === 'zh' ? `按天收藏 · ${pageEntries.length} 个瞬间` : `Day by day · ${pageEntries.length} moments`;
+      if (diaryView !== 'day') $('#pageSubtitle').textContent = language === 'zh' ? `散落的回忆 · ${pageEntries.length} 个瞬间` : `Scattered memories · ${pageEntries.length} moments`;
       $('#clearBtn').textContent = c.clear; $('#toast').textContent = c.toast;
       $('#timeToggle').textContent = language === 'zh' ? (timesHidden ? '显示时间' : '隐藏时间') : (timesHidden ? 'Show times' : 'Hide times');
       $('#meals').classList.toggle('times-hidden', timesHidden);
-      $('#meals').classList.toggle('grouped', diaryView !== 'day');
+      $('#meals').classList.toggle('collage', diaryView !== 'day' && pageEntries.length > 0);
+      const count = Math.max(1, pageEntries.length);
+      const columns = Math.min(count, 12, Math.max(2, Math.ceil(Math.sqrt(count * 1.7))));
+      const mobileColumns = Math.min(count, 8, Math.max(2, Math.ceil(Math.sqrt(count * .7))));
+      $('#meals').style.setProperty('--board-cols', columns);
+      $('#meals').style.setProperty('--board-rows', Math.ceil(count / columns));
+      $('#meals').style.setProperty('--board-mobile-cols', mobileColumns);
+      $('#meals').style.setProperty('--board-mobile-rows', Math.ceil(count / mobileColumns));
       $('#pageCount').textContent = c.page.replace('{n}', pageIndex + 1).replace('{all}', pages.length);
       $('#prevPage').disabled = pageIndex === pages.length - 1; $('#nextPage').disabled = pageIndex === 0;
       $('#todayCount').textContent = entries.filter(e => e.date === todayKey).length;
       $('#totalCount').textContent = entries.length;
-      if (!pageEntries.length && diaryView === 'day') {
+      if (!pageEntries.length) {
         $('#meals').innerHTML = `<div class="empty"><div><b>${c.emptyTitle}</b>${c.emptyBody}</div></div>`;
         return;
       }
       const photoCards = items => items.map((e, i) => `
-        <article class="meal-card" style="animation-delay:${Math.min(i, 8) * .04}s">
+        <article class="meal-card" style="animation-delay:${Math.min(i, 8) * .04}s;--tilt:${[-3,2,-1,3,-2,1][i % 6]}deg;--shift:${[2,-3,3,-1][i % 4]}px">
           <div class="photo-wrap ${e.thumbnail || e.data ? '' : 'loading'}" data-entry-id="${e.id}">
             <img ${e.thumbnail || e.data ? `src="${e.thumbnail || e.data}"` : ''} loading="lazy" decoding="async" alt="life journal photo" />
             <button class="delete" data-id="${e.id}" aria-label="delete">×</button>
           </div>
-          <div class="caption"><strong>${c.caption}</strong><time>${e.time}</time></div>
+          <div class="caption"><strong>${c.caption}</strong><time>${diaryView === 'day' ? '' : `${Number(e.date.slice(5,7))}/${Number(e.date.slice(8))} · `}${e.time}</time></div>
         </article>`).join('');
-      $('#meals').innerHTML = diaryView === 'day' ? photoCards(pageEntries) : dates.map(date => {
-        const items = pageEntries.filter(e => e.date === date);
-        return `<section class="day-group"><h3 class="day-heading">${formatDate(date, true)}<small>${items.length ? (language === 'zh' ? `${items.length} 张` : `${items.length} photos`) : ''}</small></h3>${items.length ? `<div class="meals">${photoCards(items)}</div>` : `<p class="day-empty">${language === 'zh' ? '这一天还没有收藏 ✿' : 'No keeps on this day ✿'}</p>`}</section>`;
-      }).join('');
+      const scatterKey = entry => [...String(entry.id)].reduce((hash, ch) => (Math.imul(hash, 31) + ch.charCodeAt(0)) | 0, 7);
+      const displayedEntries = diaryView === 'day' ? pageEntries : [...pageEntries].sort((a,b) => scatterKey(a) - scatterKey(b));
+      $('#meals').innerHTML = photoCards(displayedEntries);
       document.querySelectorAll('.delete').forEach(btn => btn.onclick = async () => {
         const entry = entries.find(item => item.id === btn.dataset.id);
         if (!entry || !currentUser) return;
