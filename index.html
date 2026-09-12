@@ -137,6 +137,10 @@
     .meals.collage { position: relative; display: block; height: clamp(360px, 65svh, 680px); padding: 0; }
     .collage .meal-card { position: absolute; min-height: 0; min-width: 0; display: flex; flex-direction: column; padding: 4px; background: var(--card); box-shadow: 2px 5px 10px #302d2b30; border: 1px solid var(--line); border-radius: 3px; opacity: 1; animation: none; transform: translate(-50%, -50%) rotate(var(--tilt)); transition: transform .2s; }
     .collage .meal-card:hover, .collage .meal-card:focus-within { z-index: 20; transform: translate(-50%, -50%) rotate(0deg) scale(1.12); }
+    .collage .meal-card { touch-action: none; user-select: none; cursor: grab; }
+    .collage .photo-wrap { cursor: grab; }
+    .collage img { pointer-events: none; -webkit-user-drag: none; }
+    .collage .meal-card.dragging { z-index: 100; cursor: grabbing; transform: translate(-50%, -50%) rotate(0deg); transition: none; }
     .collage .photo-wrap { flex: 1; min-height: 0; aspect-ratio: auto; border: 0; border-radius: 2px; box-shadow: none; }
     .collage .caption { padding: 3px 0 0; }
     .collage .caption strong { display: none; }
@@ -849,6 +853,7 @@
       const displayedEntries = diaryView === 'day' ? pageEntries : [...pageEntries].sort((a,b) => scatterKey(a) - scatterKey(b));
       $('#meals').innerHTML = photoCards(displayedEntries);
       layoutCollage();
+      enableCollageDragging();
       document.querySelectorAll('.lightbox-delete').forEach(btn => btn.onclick = async () => {
         const entry = entries.find(item => item.id === btn.dataset.id);
         if (!entry || !currentUser) return;
@@ -864,6 +869,8 @@
         } catch (error) { console.error(error); btn.disabled = false; alert(copy[language].storageError); }
       });
       document.querySelectorAll('.photo-wrap').forEach(wrap => wrap.onclick = async event => {
+        const card = wrap.closest('.meal-card');
+        if (Number(card.dataset.suppressClickUntil || 0) > Date.now()) return;
         const entry = entries.find(item => item.id === wrap.dataset.entryId);
         if (!entry) return;
         $('#photoDelete').dataset.id = entry.id;
@@ -895,11 +902,51 @@
         const angle = i * 2.399963229728653;
         const radius = count === 1 ? 0 : Math.sqrt((i + .5) / count);
         const variation = [.9, 1.08, .96, 1.12, .86, 1.02][i % 6];
-        const w = Math.min(width * .45, Math.sqrt(width * height / count) * .79) * variation;
+        const w = Math.min(width * .45, Math.sqrt(width * height / count) * .66) * variation;
         const h = Math.min(height * .45, w * 1.18);
-        const x = width / 2 + Math.cos(angle) * radius * Math.max(0, width / 2 - w * .7);
-        const y = height / 2 + Math.sin(angle) * radius * Math.max(0, height / 2 - h * .7);
+        let x = width / 2 + Math.cos(angle) * radius * Math.max(0, width / 2 - w * .7);
+        let y = height / 2 + Math.sin(angle) * radius * Math.max(0, height / 2 - h * .7);
+        const saved = readCollagePositions()[card.querySelector('.photo-wrap').dataset.entryId];
+        if (saved) { x = Math.max(w * .6, Math.min(width - w * .6, saved.x * width)); y = Math.max(h * .6, Math.min(height - h * .6, saved.y * height)); }
         Object.assign(card.style, {left: `${x}px`, top: `${y}px`, width: `${w}px`, height: `${h}px`});
+      });
+    }
+    function collagePositionKey() { return `memorable-layout:${currentUser?.id || 'local'}:${diaryView}:${getPages()[pageIndex]}`; }
+    function readCollagePositions() {
+      try { return JSON.parse(localStorage.getItem(collagePositionKey()) || '{}'); } catch { return {}; }
+    }
+    function enableCollageDragging() {
+      const board = $('#meals');
+      if (!board.classList.contains('collage')) return;
+      board.querySelectorAll('.meal-card').forEach(card => {
+        let drag = null;
+        card.onpointerdown = event => {
+          if (!event.isPrimary || event.button !== 0) return;
+          drag = {id:event.pointerId, startX:event.clientX, startY:event.clientY, x:parseFloat(card.style.left), y:parseFloat(card.style.top), moved:false};
+          card.setPointerCapture(event.pointerId);
+        };
+        card.onpointermove = event => {
+          if (!drag || drag.id !== event.pointerId) return;
+          const dx = event.clientX - drag.startX, dy = event.clientY - drag.startY;
+          if (!drag.moved && Math.hypot(dx, dy) < 7) return;
+          drag.moved = true; card.classList.add('dragging');
+          const marginX = card.offsetWidth * .6, marginY = card.offsetHeight * .6;
+          card.style.left = `${Math.max(marginX, Math.min(board.clientWidth - marginX, drag.x + dx))}px`;
+          card.style.top = `${Math.max(marginY, Math.min(board.clientHeight - marginY, drag.y + dy))}px`;
+        };
+        const finish = event => {
+          if (!drag || drag.id !== event.pointerId) return;
+          if (drag.moved) {
+            card.dataset.suppressClickUntil = String(Date.now() + 500);
+            const positions = readCollagePositions();
+            positions[card.querySelector('.photo-wrap').dataset.entryId] = {x:parseFloat(card.style.left)/board.clientWidth, y:parseFloat(card.style.top)/board.clientHeight};
+            try { localStorage.setItem(collagePositionKey(), JSON.stringify(positions)); } catch (error) { console.warn('Layout could not be saved', error); }
+          } else if (event.type === 'pointerup') { card.querySelector('.photo-wrap').click(); card.dataset.suppressClickUntil = String(Date.now() + 500); }
+          card.classList.remove('dragging');
+          if (card.hasPointerCapture(event.pointerId)) card.releasePointerCapture(event.pointerId);
+          drag = null;
+        };
+        card.onpointerup = finish; card.onpointercancel = finish; card.onlostpointercapture = finish;
       });
     }
     if (window.ResizeObserver) new ResizeObserver(layoutCollage).observe($('#meals'));
