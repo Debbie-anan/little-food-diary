@@ -134,16 +134,15 @@
     .view-tabs button { border: 1px solid var(--ink); border-radius: 12px 14px 10px 13px; padding: 7px 12px; background: var(--card); color: var(--ink); }
     #calendarBtn { margin-left: auto; background: #e8f1df; }
     .view-tabs button[aria-pressed="true"] { background: var(--yolk); box-shadow: 2px 3px 0 var(--ink); }
-    .meals.collage { height: clamp(320px, 60svh, 620px); grid-template-columns: repeat(var(--board-cols), minmax(0, 1fr)); grid-template-rows: repeat(var(--board-rows), minmax(0, 1fr)); gap: 13px; padding: 12px 5px; align-items: stretch; }
-    .collage .meal-card { min-height: 0; min-width: 0; display: flex; flex-direction: column; padding: 4px; background: var(--card); box-shadow: 1px 3px 6px #302d2b20; border: 1px solid var(--line); border-radius: 3px; opacity: 1; animation: none; transform: rotate(var(--tilt)) translateY(var(--shift)); }
+    .meals.collage { position: relative; display: block; height: clamp(360px, 65svh, 680px); padding: 0; }
+    .collage .meal-card { position: absolute; min-height: 0; min-width: 0; display: flex; flex-direction: column; padding: 4px; background: var(--card); box-shadow: 2px 5px 10px #302d2b30; border: 1px solid var(--line); border-radius: 3px; opacity: 1; animation: none; transform: translate(-50%, -50%) rotate(var(--tilt)); transition: transform .2s; }
+    .collage .meal-card:hover, .collage .meal-card:focus-within { z-index: 20; transform: translate(-50%, -50%) rotate(0deg) scale(1.12); }
     .collage .photo-wrap { flex: 1; min-height: 0; aspect-ratio: auto; border: 0; border-radius: 2px; box-shadow: none; }
     .collage .caption { padding: 3px 0 0; }
     .collage .caption strong { display: none; }
     .collage .caption time { width: 100%; text-align: center; font-size: 10px; overflow: hidden; white-space: nowrap; }
     .collage .delete { width: 22px; height: 22px; top: 2px; right: 2px; }
-    @media (max-width: 760px) {
-      .meals.collage { grid-template-columns: repeat(var(--board-mobile-cols), minmax(0, 1fr)); grid-template-rows: repeat(var(--board-mobile-rows), minmax(0, 1fr)); gap: 9px; }
-    }
+    .lightbox-delete { position: absolute; bottom: calc(18px + env(safe-area-inset-bottom)); padding: 9px 20px; border: 1px solid #fff9ed80; border-radius: 99px; color: var(--paper); background: var(--ink); font-size: 15px; }
 
     .page-nav { display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 28px; }
     .page-btn { width: 42px; height: 42px; border: 1.5px solid var(--ink); border-radius: 50%; background: var(--card); box-shadow: 3px 3px 0 var(--ink); font-size: 20px; transition: .18s; }
@@ -268,6 +267,7 @@
   <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Photo preview">
     <button class="lightbox-close" id="lightboxClose" aria-label="Close">×</button>
     <img class="lightbox-photo" id="lightboxPhoto" alt="放大的生活手账照片" />
+    <button class="lightbox-delete" id="photoDelete">删除照片</button>
   </div>
 
   <div class="auth-modal" id="authModal" role="dialog" aria-modal="true">
@@ -829,13 +829,7 @@
       $('#timeToggle').textContent = language === 'zh' ? (timesHidden ? '显示时间' : '隐藏时间') : (timesHidden ? 'Show times' : 'Hide times');
       $('#meals').classList.toggle('times-hidden', timesHidden);
       $('#meals').classList.toggle('collage', diaryView !== 'day' && pageEntries.length > 0);
-      const count = Math.max(1, pageEntries.length);
-      const columns = Math.min(count, 12, Math.max(2, Math.ceil(Math.sqrt(count * 1.7))));
-      const mobileColumns = Math.min(count, 8, Math.max(2, Math.ceil(Math.sqrt(count * .7))));
-      $('#meals').style.setProperty('--board-cols', columns);
-      $('#meals').style.setProperty('--board-rows', Math.ceil(count / columns));
-      $('#meals').style.setProperty('--board-mobile-cols', mobileColumns);
-      $('#meals').style.setProperty('--board-mobile-rows', Math.ceil(count / mobileColumns));
+      $('#photoDelete').textContent = language === 'zh' ? '删除照片' : 'Delete photo';
       $('#pageCount').textContent = c.page.replace('{n}', pageIndex + 1).replace('{all}', pages.length);
       $('#prevPage').disabled = pageIndex === pages.length - 1; $('#nextPage').disabled = pageIndex === 0;
       $('#todayCount').textContent = entries.filter(e => e.date === todayKey).length;
@@ -845,19 +839,20 @@
         return;
       }
       const photoCards = items => items.map((e, i) => `
-        <article class="meal-card" style="animation-delay:${Math.min(i, 8) * .04}s;--tilt:${[-3,2,-1,3,-2,1][i % 6]}deg;--shift:${[2,-3,3,-1][i % 4]}px">
-          <div class="photo-wrap ${e.thumbnail || e.data ? '' : 'loading'}" data-entry-id="${e.id}">
+        <article class="meal-card" style="animation-delay:${Math.min(i, 8) * .04}s;--tilt:${[-12,8,-6,14,-9,5,11,-4][i % 8]}deg">
+          <div class="photo-wrap ${e.thumbnail || e.data ? '' : 'loading'}" data-entry-id="${e.id}" role="button" tabindex="0" aria-label="${language === 'zh' ? '放大照片' : 'Enlarge photo'}">
             <img ${e.thumbnail || e.data ? `src="${e.thumbnail || e.data}"` : ''} loading="lazy" decoding="async" alt="life journal photo" />
-            <button class="delete" data-id="${e.id}" aria-label="delete">×</button>
           </div>
           <div class="caption"><strong>${c.caption}</strong><time>${diaryView === 'day' ? '' : `${Number(e.date.slice(5,7))}/${Number(e.date.slice(8))} · `}${e.time}</time></div>
         </article>`).join('');
       const scatterKey = entry => [...String(entry.id)].reduce((hash, ch) => (Math.imul(hash, 31) + ch.charCodeAt(0)) | 0, 7);
       const displayedEntries = diaryView === 'day' ? pageEntries : [...pageEntries].sort((a,b) => scatterKey(a) - scatterKey(b));
       $('#meals').innerHTML = photoCards(displayedEntries);
-      document.querySelectorAll('.delete').forEach(btn => btn.onclick = async () => {
+      layoutCollage();
+      document.querySelectorAll('.lightbox-delete').forEach(btn => btn.onclick = async () => {
         const entry = entries.find(item => item.id === btn.dataset.id);
         if (!entry || !currentUser) return;
+        if (!confirm(language === 'zh' ? '删除这张云端照片？' : 'Delete this cloud photo?')) return;
         btn.disabled = true;
         try {
           const { error: storageError } = await cloud.storage.from('journal-photos').remove([entry.storagePath, thumbnailPath(entry.storagePath)]);
@@ -865,13 +860,14 @@
           const { error } = await cloud.from('journal_entries').delete().eq('id', entry.id);
           if (error) throw error;
           await removeCachedThumbnail(entry.storagePath);
-          entries = entries.filter(item => item.id !== entry.id); render();
+          entries = entries.filter(item => item.id !== entry.id); closePhoto(); btn.disabled = false; render();
         } catch (error) { console.error(error); btn.disabled = false; alert(copy[language].storageError); }
       });
       document.querySelectorAll('.photo-wrap').forEach(wrap => wrap.onclick = async event => {
-        if (event.target.closest('.delete')) return;
         const entry = entries.find(item => item.id === wrap.dataset.entryId);
         if (!entry) return;
+        $('#photoDelete').dataset.id = entry.id;
+        $('#photoDelete').hidden = !currentUser;
         $('#lightboxPhoto').src = entry.data || entry.thumbnail || '';
         $('#lightboxPhoto').alt = 'life journal photo';
         $('#lightbox').classList.add('open');
@@ -883,11 +879,31 @@
               entry.data = await blobToDataUrl(await fetchPrivatePhoto(entry.storagePath));
               await cacheFullPhoto(entry.storagePath, entry.data);
             }
-            if ($('#lightbox').classList.contains('open')) $('#lightboxPhoto').src = entry.data;
+            if ($('#lightbox').classList.contains('open') && $('#photoDelete').dataset.id === entry.id) $('#lightboxPhoto').src = entry.data;
           } catch (error) { console.warn('Full photo load failed:', error); alert(copy[language].storageError); closePhoto(); }
         }
       });
+      document.querySelectorAll('.photo-wrap').forEach(wrap => wrap.onkeydown = event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); wrap.click(); } });
     }
+
+    function layoutCollage() {
+      const board = $('#meals');
+      if (!board.classList.contains('collage')) return;
+      const cards = [...board.querySelectorAll('.meal-card')], count = cards.length;
+      const width = board.clientWidth, height = board.clientHeight;
+      cards.forEach((card, i) => {
+        const angle = i * 2.399963229728653;
+        const radius = count === 1 ? 0 : Math.sqrt((i + .5) / count);
+        const variation = [.9, 1.08, .96, 1.12, .86, 1.02][i % 6];
+        const w = Math.min(width * .45, Math.sqrt(width * height / count) * .79) * variation;
+        const h = Math.min(height * .45, w * 1.18);
+        const x = width / 2 + Math.cos(angle) * radius * Math.max(0, width / 2 - w * .7);
+        const y = height / 2 + Math.sin(angle) * radius * Math.max(0, height / 2 - h * .7);
+        Object.assign(card.style, {left: `${x}px`, top: `${y}px`, width: `${w}px`, height: `${h}px`});
+      });
+    }
+    if (window.ResizeObserver) new ResizeObserver(layoutCollage).observe($('#meals'));
+    else window.addEventListener('resize', layoutCollage);
 
     function showToast() {
       $('#toast').classList.add('show');
