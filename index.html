@@ -113,6 +113,15 @@
     .page-tools { display: flex; align-items: center; gap: 12px; }
     .clear-btn, .time-toggle { border: 0; background: transparent; color: var(--muted); font-size: 13px; text-decoration: underline; text-underline-offset: 4px; }
     .time-toggle { color: var(--berry-dark); }
+    .view-tabs { display: flex; gap: 6px; margin-bottom: 22px; }
+    .view-tabs button { border: 1px solid var(--ink); border-radius: 12px 14px 10px 13px; padding: 7px 20px; background: var(--card); color: var(--ink); }
+    .view-tabs button[aria-pressed="true"] { background: var(--yolk); box-shadow: 2px 3px 0 var(--ink); }
+    .meals.grouped { display: block; }
+    .day-group { margin-bottom: 27px; }
+    .day-heading { display: flex; align-items: center; gap: 12px; margin: 0 0 13px; font-size: 23px; font-weight: 400; }
+    .day-heading::after { content: ''; height: 1px; background: var(--line); flex: 1; }
+    .day-heading small { color: var(--muted); font-size: 13px; }
+    .day-empty { color: var(--muted); font-size: 14px; margin: 0 0 18px; }
 
     .page-nav { display: flex; align-items: center; justify-content: center; gap: 15px; margin-top: 28px; }
     .page-btn { width: 42px; height: 42px; border: 1.5px solid var(--ink); border-radius: 50%; background: var(--card); box-shadow: 3px 3px 0 var(--ink); font-size: 20px; transition: .18s; }
@@ -225,6 +234,7 @@
     <section class="notebook">
       <div class="rings"><i></i><i></i><i></i><i></i><i></i></div>
       <div class="page-corner"></div>
+      <div class="view-tabs" role="group" aria-label="查看维度"><button data-view="day">日</button><button data-view="week">周</button><button data-view="month">月</button></div>
       <div class="section-head">
         <div><h2 id="pageDate"></h2><p id="pageSubtitle">今天有什么，让你想多看一眼？</p></div>
         <div class="page-tools"><button class="time-toggle" id="timeToggle">隐藏时间</button><button class="clear-btn" id="clearBtn">清空记录</button></div>
@@ -290,6 +300,8 @@
     let currentUser = null;
     let language = localStorage.getItem('food-diary-language') || 'zh';
     let pageIndex = 0;
+    let diaryView = localStorage.getItem('little-keeps-view') || 'day';
+    if (!['day', 'week', 'month'].includes(diaryView)) diaryView = 'day';
     let timesHidden = localStorage.getItem('little-keeps-hide-times') === 'true';
 
     const copy = {
@@ -340,7 +352,7 @@
       }
       pendingFiles = [];
       if (added) {
-        pageIndex = getPages().indexOf(chosenDate);
+        pageIndex = getPages().indexOf(periodKey(chosenDate));
         $('#momentModal').classList.remove('open');
         render(); showToast();
       } else { alert(copy[language].uploadError); }
@@ -367,6 +379,13 @@
 
     $('#prevPage').onclick = () => { pageIndex = Math.min(pageIndex + 1, getPages().length - 1); render(); };
     $('#nextPage').onclick = () => { pageIndex = Math.max(pageIndex - 1, 0); render(); };
+    document.querySelectorAll('[data-view]').forEach(button => button.onclick = () => {
+      const anchor = getPages()[pageIndex] || todayKey;
+      diaryView = button.dataset.view;
+      localStorage.setItem('little-keeps-view', diaryView);
+      pageIndex = Math.max(0, getPages().indexOf(periodKey(anchor)));
+      render();
+    });
     $('#timeToggle').onclick = () => {
       timesHidden = !timesHidden;
       localStorage.setItem('little-keeps-hide-times', String(timesHidden));
@@ -689,7 +708,21 @@
       });
     }
 
-    function getPages() { return [...new Set([todayKey, ...entries.map(e => e.date)])].sort().reverse(); }
+    function periodKey(key) {
+      if (diaryView === 'month') return key.slice(0, 7) + '-01';
+      if (diaryView === 'week') {
+        const date = new Date(key + 'T12:00:00');
+        date.setDate(date.getDate() - (date.getDay() + 6) % 7);
+        return iso(date);
+      }
+      return key;
+    }
+    function getPages() { return [...new Set([todayKey, ...entries.map(e => e.date)].map(periodKey))].sort().reverse(); }
+    function periodDates(key) {
+      const start = new Date(key + 'T12:00:00');
+      const count = diaryView === 'week' ? 7 : diaryView === 'month' ? new Date(start.getFullYear(), start.getMonth() + 1, 0).getDate() : 1;
+      return Array.from({length: count}, (_, i) => { const date = new Date(start); date.setDate(date.getDate() + i); return iso(date); });
+    }
 
     function formatDate(key, short = false) {
       const d = new Date(key + 'T12:00:00');
@@ -699,7 +732,11 @@
     function render() {
       const c = copy[language], pages = getPages();
       pageIndex = Math.min(pageIndex, pages.length - 1);
-      const activeDate = pages[pageIndex], pageEntries = entries.filter(e => e.date === activeDate);
+      const activeDate = pages[pageIndex], dates = periodDates(activeDate), pageEntries = entries.filter(e => periodKey(e.date) === activeDate);
+      document.querySelectorAll('[data-view]').forEach(button => {
+        button.textContent = (language === 'zh' ? {day:'日', week:'周', month:'月'} : {day:'Day', week:'Week', month:'Month'})[button.dataset.view];
+        button.setAttribute('aria-pressed', String(button.dataset.view === diaryView));
+      });
       document.documentElement.lang = language === 'zh' ? 'zh-CN' : 'en';
       document.querySelector('.brand span').textContent = c.brand;
       $('#langBtn').textContent = language === 'zh' ? 'EN' : '中文';
@@ -715,25 +752,33 @@
       updateAccountUi();
       $('#installBtn span').textContent = c.install;
       $('#pageDate').textContent = formatDate(activeDate); $('#pageSubtitle').textContent = c.subtitle;
+      if (diaryView === 'week') $('#pageDate').textContent = `${formatDate(activeDate, true)} — ${formatDate(dates[6], true)}`;
+      if (diaryView === 'month') $('#pageDate').textContent = new Intl.DateTimeFormat(language === 'zh' ? 'zh-CN' : 'en-US', {year:'numeric', month:'long'}).format(new Date(activeDate + 'T12:00:00'));
+      if (diaryView !== 'day') $('#pageSubtitle').textContent = language === 'zh' ? `按天收藏 · ${pageEntries.length} 个瞬间` : `Day by day · ${pageEntries.length} moments`;
       $('#clearBtn').textContent = c.clear; $('#toast').textContent = c.toast;
       $('#timeToggle').textContent = language === 'zh' ? (timesHidden ? '显示时间' : '隐藏时间') : (timesHidden ? 'Show times' : 'Hide times');
       $('#meals').classList.toggle('times-hidden', timesHidden);
+      $('#meals').classList.toggle('grouped', diaryView !== 'day');
       $('#pageCount').textContent = c.page.replace('{n}', pageIndex + 1).replace('{all}', pages.length);
       $('#prevPage').disabled = pageIndex === pages.length - 1; $('#nextPage').disabled = pageIndex === 0;
       $('#todayCount').textContent = entries.filter(e => e.date === todayKey).length;
       $('#totalCount').textContent = entries.length;
-      if (!pageEntries.length) {
+      if (!pageEntries.length && diaryView === 'day') {
         $('#meals').innerHTML = `<div class="empty"><div><b>${c.emptyTitle}</b>${c.emptyBody}</div></div>`;
         return;
       }
-      $('#meals').innerHTML = pageEntries.map((e, i) => `
-        <article class="meal-card" style="animation-delay:${i * .07}s">
+      const photoCards = items => items.map((e, i) => `
+        <article class="meal-card" style="animation-delay:${Math.min(i, 8) * .04}s">
           <div class="photo-wrap ${e.thumbnail || e.data ? '' : 'loading'}" data-entry-id="${e.id}">
             <img ${e.thumbnail || e.data ? `src="${e.thumbnail || e.data}"` : ''} loading="lazy" decoding="async" alt="life journal photo" />
             <button class="delete" data-id="${e.id}" aria-label="delete">×</button>
           </div>
           <div class="caption"><strong>${c.caption}</strong><time>${e.time}</time></div>
         </article>`).join('');
+      $('#meals').innerHTML = diaryView === 'day' ? photoCards(pageEntries) : dates.map(date => {
+        const items = pageEntries.filter(e => e.date === date);
+        return `<section class="day-group"><h3 class="day-heading">${formatDate(date, true)}<small>${items.length ? (language === 'zh' ? `${items.length} 张` : `${items.length} photos`) : ''}</small></h3>${items.length ? `<div class="meals">${photoCards(items)}</div>` : `<p class="day-empty">${language === 'zh' ? '这一天还没有收藏 ✿' : 'No keeps on this day ✿'}</p>`}</section>`;
+      }).join('');
       document.querySelectorAll('.delete').forEach(btn => btn.onclick = async () => {
         const entry = entries.find(item => item.id === btn.dataset.id);
         if (!entry || !currentUser) return;
