@@ -898,20 +898,25 @@
       if (!board.classList.contains('collage')) return;
       const cards = [...board.querySelectorAll('.meal-card')], count = cards.length;
       const width = board.clientWidth, height = board.clientHeight;
+      const columns = Math.max(1, Math.ceil(Math.sqrt(count * width / height * 1.18)));
+      const rows = Math.ceil(count / columns), cellW = width / columns, cellH = height / rows;
+      const positions = readCollagePositions();
       cards.forEach((card, i) => {
-        const angle = i * 2.399963229728653;
-        const radius = count === 1 ? 0 : Math.sqrt((i + .5) / count);
-        const variation = [.9, 1.08, .96, 1.12, .86, 1.02][i % 6];
-        const w = Math.min(width * .45, Math.sqrt(width * height / count) * .66) * variation;
-        const h = Math.min(height * .45, w * 1.18);
-        let x = width / 2 + Math.cos(angle) * radius * Math.max(0, width / 2 - w * .7);
-        let y = height / 2 + Math.sin(angle) * radius * Math.max(0, height / 2 - h * .7);
-        const saved = readCollagePositions()[card.querySelector('.photo-wrap').dataset.entryId];
+        const id = card.querySelector('.photo-wrap').dataset.entryId;
+        let seed = [...id].reduce((n, ch) => (n * 31 + ch.charCodeAt(0)) >>> 0, scatterSeed);
+        const random = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; };
+        const w = Math.min(cellW * .64, cellH * .56, width * .4) * (.92 + random() * .08);
+        const h = w * 1.18;
+        let x = (i % columns + .5 + (random() - .5) * .16) * cellW;
+        let y = (Math.floor(i / columns) + .5 + (random() - .5) * .16) * cellH;
+        card.style.setProperty('--tilt', `${(random() - .5) * 24}deg`);
+        const saved = positions[id];
         if (saved) { x = Math.max(w * .6, Math.min(width - w * .6, saved.x * width)); y = Math.max(h * .6, Math.min(height - h * .6, saved.y * height)); }
         Object.assign(card.style, {left: `${x}px`, top: `${y}px`, width: `${w}px`, height: `${h}px`});
       });
     }
-    function collagePositionKey() { return `memorable-layout:${currentUser?.id || 'local'}:${diaryView}:${getPages()[pageIndex]}`; }
+    let scatterSeed = 42;
+    function collagePositionKey() { return `memorable-layout-v2:${currentUser?.id || 'local'}:${diaryView}:${getPages()[pageIndex]}`; }
     function readCollagePositions() {
       try { return JSON.parse(localStorage.getItem(collagePositionKey()) || '{}'); } catch { return {}; }
     }
@@ -951,6 +956,54 @@
     }
     if (window.ResizeObserver) new ResizeObserver(layoutCollage).observe($('#meals'));
     else window.addEventListener('resize', layoutCollage);
+
+    const shakeButton = document.createElement('button');
+    shakeButton.textContent = '↝ 摇一摇';
+    shakeButton.title = '开启手机摇动感应；不支持时点击重新散落';
+    $('#calendarBtn').before(shakeButton);
+    let motionEnabled = false, lastAcceleration = null, lastMotionTime = 0, shakeTimer;
+    function settlePhotos() {
+      $('#meals').querySelectorAll('.meal-card').forEach(card => { card.getAnimations().forEach(animation => animation.cancel()); });
+      if (!$('#meals').classList.contains('collage')) return;
+      scatterSeed = Math.floor(Math.random() * 1000000);
+      try { localStorage.removeItem(collagePositionKey()); } catch {}
+      layoutCollage();
+    }
+    function handleMotion(event) {
+      if (document.hidden || !$('#meals').classList.contains('collage') || $('#meals .dragging') || $('#lightbox').classList.contains('open')) return;
+      const a = event.accelerationIncludingGravity;
+      if (!a || ![a.x, a.y, a.z].every(Number.isFinite)) return;
+      const now = Date.now(), previous = lastAcceleration;
+      lastAcceleration = {x:a.x, y:a.y, z:a.z};
+      if (!previous || now - lastMotionTime < 100 || Math.hypot(a.x-previous.x, a.y-previous.y, a.z-previous.z) < 9) return;
+      lastMotionTime = now;
+      $('#meals').querySelectorAll('.meal-card').forEach((card, i) => {
+        card.getAnimations().forEach(animation => animation.cancel());
+        const tilt = parseFloat(card.style.getPropertyValue('--tilt')) || 0;
+        const dx = Math.max(-14, Math.min(14, a.x * 2)) * (i % 2 ? 1 : -1);
+        card.animate([
+          {transform:`translate(-50%, -50%) rotate(${tilt}deg)`},
+          {transform:`translate(calc(-50% + ${dx}px), calc(-50% + ${i % 2 ? 10 : -10}px)) rotate(${tilt + dx}deg)`},
+          {transform:`translate(-50%, -50%) rotate(${tilt}deg)`}
+        ], {duration:350, easing:'ease-in-out'});
+      });
+      clearTimeout(shakeTimer);
+      shakeTimer = setTimeout(settlePhotos, 650);
+    }
+    function startMotion() {
+      if (motionEnabled) return;
+      motionEnabled = true;
+      window.addEventListener('devicemotion', handleMotion, {passive:true});
+    }
+    shakeButton.onclick = async () => {
+      try {
+        if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+          if (await DeviceMotionEvent.requestPermission() !== 'granted') { alert('未获得运动感应权限，仍可点击按钮重新散落照片。'); settlePhotos(); return; }
+        }
+        startMotion(); settlePhotos();
+      } catch { settlePhotos(); }
+    };
+    if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission !== 'function') startMotion();
 
     function showToast() {
       $('#toast').classList.add('show');
