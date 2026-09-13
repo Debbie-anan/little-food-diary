@@ -279,7 +279,6 @@
       </div>
       <div class="section-head">
         <div><h2 id="pageDate"></h2><p id="pageSubtitle">今天有什么，让你想多看一眼？</p></div>
-        <div class="page-tools"><button class="clear-btn" id="clearBtn">清空记录</button></div>
       </div>
       </div>
       <div class="meals" id="meals"></div>
@@ -452,22 +451,6 @@
       submit.textContent = language === 'zh' ? '保存这个瞬间' : 'Save this moment';
     };
 
-    $('#clearBtn').onclick = async () => {
-      if (!currentUser) { openAuth(); return; }
-      if (!entries.length || !confirm(copy[language].confirm)) return;
-      try {
-        const mainPaths = entries.map(entry => entry.storagePath).filter(Boolean);
-        const paths = mainPaths.flatMap(path => [path, thumbnailPath(path)]);
-        if (paths.length) {
-          const { error: storageError } = await cloud.storage.from('journal-photos').remove(paths);
-          if (storageError) throw storageError;
-        }
-        const { error } = await cloud.from('journal_entries').delete().eq('user_id', currentUser.id);
-        if (error) throw error;
-        await Promise.all(mainPaths.map(removeCachedThumbnail));
-        entries = []; render();
-      } catch (error) { console.error(error); alert(copy[language].storageError); }
-    };
 
     $('#prevPage').onclick = () => { pageIndex = Math.min(pageIndex + 1, getPages().length - 1); render(); };
     $('#nextPage').onclick = () => { pageIndex = Math.max(pageIndex - 1, 0); render(); };
@@ -849,7 +832,7 @@
       if (diaryView === 'week') $('#pageDate').textContent = `${formatDate(activeDate, true)} — ${formatDate(dates[6], true)}`;
       if (diaryView === 'month') $('#pageDate').textContent = new Intl.DateTimeFormat(language === 'zh' ? 'zh-CN' : 'en-US', {year:'numeric', month:'long'}).format(new Date(activeDate + 'T12:00:00'));
       if (diaryView !== 'day') $('#pageSubtitle').textContent = language === 'zh' ? `散落的回忆 · ${pageEntries.length} 个瞬间` : `Scattered memories · ${pageEntries.length} moments`;
-      $('#clearBtn').textContent = c.clear; $('#toast').textContent = c.toast;
+      $('#toast').textContent = c.toast;
       const timeLabel = language === 'zh' ? (timesHidden ? '显示时间' : '隐藏时间') : (timesHidden ? 'Show times' : 'Hide times');
       $('#timeToggle').setAttribute('aria-label', timeLabel);
       $('#timeToggle').setAttribute('aria-pressed', String(timesHidden));
