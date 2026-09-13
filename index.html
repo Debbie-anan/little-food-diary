@@ -133,7 +133,12 @@
     .time-toggle { color: var(--berry-dark); }
     .view-tabs { display: flex; gap: 6px; margin-bottom: 22px; }
     .view-tabs button { border: 1px solid var(--ink); border-radius: 12px 14px 10px 13px; padding: 7px 12px; background: var(--card); color: var(--ink); }
-    #calendarBtn { margin-left: auto; background: #e8f1df; }
+    #calendarBtn { margin-left: auto; }
+    #calendarBtn, #timeToggle { position: relative; width: 56px; height: 56px; min-width: 56px; padding: 0; border: 0; background: transparent; box-shadow: none; overflow: hidden; border-radius: 10px; mix-blend-mode: multiply; }
+    #calendarBtn img { position: absolute; width: 64px; max-width: none; height: auto; left: -4px; top: -46px; pointer-events: none; }
+    #timeToggle img { position: absolute; width: 80px; max-width: none; height: auto; left: -12px; top: -64px; pointer-events: none; }
+    #timeToggle[aria-pressed="true"] { opacity: .55; }
+    #calendarBtn:focus-visible, #timeToggle:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
     .view-tabs button[aria-pressed="true"] { background: var(--yolk); box-shadow: 2px 3px 0 var(--ink); }
     .meals.collage { position: relative; display: block; height: clamp(360px, 65svh, 680px); padding: 0; }
     .collage .meal-card { position: absolute; min-height: 0; min-width: 0; display: flex; flex-direction: column; padding: 4px; background: var(--card); box-shadow: 2px 5px 10px #302d2b30; border: 1px solid var(--line); border-radius: 3px; opacity: 1; animation: none; transform: translate(-50%, -50%) rotate(var(--tilt)); transition: transform .2s; }
@@ -259,10 +264,10 @@
     <section class="notebook">
       <div class="rings"><i></i><i></i><i></i><i></i><i></i></div>
       <div class="page-corner"></div>
-      <div class="view-tabs" role="group" aria-label="查看维度"><button data-view="day">日</button><button data-view="week">周</button><button data-view="month">月</button><button id="calendarBtn">▦ 日历</button></div>
+      <div class="view-tabs" role="group" aria-label="查看维度"><button data-view="day">日</button><button data-view="week">周</button><button data-view="month">月</button><button id="calendarBtn" aria-label="日历"><img src="./calendar-sticker.jpg" alt=""></button></div>
       <div class="section-head">
         <div><h2 id="pageDate"></h2><p id="pageSubtitle">今天有什么，让你想多看一眼？</p></div>
-        <div class="page-tools"><button class="time-toggle" id="timeToggle">隐藏时间</button><button class="clear-btn" id="clearBtn">清空记录</button></div>
+        <div class="page-tools"><button class="time-toggle" id="timeToggle" aria-label="隐藏时间"><img src="./clock-sticker.jpg" alt=""></button><button class="clear-btn" id="clearBtn">清空记录</button></div>
       </div>
       <div class="meals" id="meals"></div>
       <div class="page-nav"><button class="page-btn" id="prevPage" aria-label="Previous page">‹</button><span class="page-count" id="pageCount"></span><button class="page-btn" id="nextPage" aria-label="Next page">›</button></div>
@@ -819,7 +824,8 @@
       $('#todayLabel').textContent = c.today; $('#totalLabel').textContent = c.total;
       $('#uploadBtn').setAttribute('aria-label', language === 'zh' ? '添加照片' : 'Add photos');
       $('#cameraChoice').textContent = language === 'zh' ? '拍照' : 'Take a photo';
-      $('#calendarBtn').textContent = language === 'zh' ? '▦ 日历' : '▦ Calendar';
+      $('#calendarBtn').setAttribute('aria-label', language === 'zh' ? '日历' : 'Calendar');
+      $('#calendarBtn').title = language === 'zh' ? '日历' : 'Calendar';
       $('#galleryBtn').textContent = language === 'zh' ? '从相册选择' : 'Choose from gallery';
       $('#momentTitle').textContent = language === 'zh' ? '这个瞬间发生在？' : 'When did this happen?';
       $('#momentIntro').textContent = language === 'zh' ? '选择照片对应的日期和具体时间。' : 'Choose the exact date and time for this photo.';
@@ -831,7 +837,10 @@
       if (diaryView === 'month') $('#pageDate').textContent = new Intl.DateTimeFormat(language === 'zh' ? 'zh-CN' : 'en-US', {year:'numeric', month:'long'}).format(new Date(activeDate + 'T12:00:00'));
       if (diaryView !== 'day') $('#pageSubtitle').textContent = language === 'zh' ? `散落的回忆 · ${pageEntries.length} 个瞬间` : `Scattered memories · ${pageEntries.length} moments`;
       $('#clearBtn').textContent = c.clear; $('#toast').textContent = c.toast;
-      $('#timeToggle').textContent = language === 'zh' ? (timesHidden ? '显示时间' : '隐藏时间') : (timesHidden ? 'Show times' : 'Hide times');
+      const timeLabel = language === 'zh' ? (timesHidden ? '显示时间' : '隐藏时间') : (timesHidden ? 'Show times' : 'Hide times');
+      $('#timeToggle').setAttribute('aria-label', timeLabel);
+      $('#timeToggle').setAttribute('aria-pressed', String(timesHidden));
+      $('#timeToggle').title = timeLabel;
       $('#meals').classList.toggle('times-hidden', timesHidden);
       $('#meals').classList.toggle('collage', diaryView !== 'day' && pageEntries.length > 0);
       $('#photoDelete').textContent = language === 'zh' ? '删除照片' : 'Delete photo';
