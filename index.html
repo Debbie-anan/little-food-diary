@@ -131,7 +131,7 @@
     .page-tools { display: flex; align-items: center; gap: 12px; }
     .clear-btn, .time-toggle { border: 0; background: transparent; color: var(--muted); font-size: 13px; text-decoration: underline; text-underline-offset: 4px; }
     .time-toggle { color: var(--berry-dark); }
-    .view-tabs { display: flex; gap: 6px; margin-bottom: 22px; }
+    .view-tabs { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
     .view-tabs button { border: 1px solid var(--ink); border-radius: 12px 14px 10px 13px; padding: 7px 12px; background: var(--card); color: var(--ink); }
     #calendarBtn { margin-left: auto; }
     #calendarBtn, #timeToggle { position: relative; width: 56px; height: 56px; min-width: 56px; padding: 0; border: 0; background: transparent; box-shadow: none; overflow: hidden; border-radius: 10px; mix-blend-mode: multiply; }
@@ -140,6 +140,10 @@
     #timeToggle[aria-pressed="true"] { opacity: .55; }
     #calendarBtn:focus-visible, #timeToggle:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
     .view-tabs button[aria-pressed="true"] { background: var(--yolk); box-shadow: 2px 3px 0 var(--ink); }
+    .view-tabs button[data-view] { border: 0; background: transparent; box-shadow: none; padding: 7px 10px; }
+    .view-tabs button[data-view][aria-pressed="true"] { background: #ffce5c55; box-shadow: none; }
+    #timeToggle { margin-left: 0; }
+    #timeToggle img { position: static; width: 42px; height: 42px; object-fit: contain; display: block; margin: 7px; }
     .meals.collage { position: relative; display: block; height: clamp(360px, 65svh, 680px); padding: 0; }
     .collage .meal-card { position: absolute; min-height: 0; min-width: 0; display: flex; flex-direction: column; padding: 4px; background: var(--card); box-shadow: 2px 5px 10px #302d2b30; border: 1px solid var(--line); border-radius: 3px; opacity: 1; animation: none; transform: translate(-50%, -50%) rotate(var(--tilt)); transition: transform .2s; }
     .collage .meal-card:hover, .collage .meal-card:focus-within { z-index: 20; transform: translate(-50%, -50%) rotate(0deg) scale(1.12); }
@@ -264,10 +268,10 @@
     <section class="notebook">
       <div class="rings"><i></i><i></i><i></i><i></i><i></i></div>
       <div class="page-corner"></div>
-      <div class="view-tabs" role="group" aria-label="查看维度"><button data-view="day">日</button><button data-view="week">周</button><button data-view="month">月</button><button id="calendarBtn" aria-label="日历"><img src="./calendar-sticker.jpg" alt=""></button></div>
+      <div class="view-tabs" role="group" aria-label="查看维度"><button data-view="day">日</button><button data-view="week">周</button><button data-view="month">月</button><button id="calendarBtn" aria-label="日历"><img src="./calendar-sticker.jpg" alt=""></button><button class="time-toggle" id="timeToggle" aria-label="隐藏时间"><img src="./clock-transparent.png" alt=""></button></div>
       <div class="section-head">
         <div><h2 id="pageDate"></h2><p id="pageSubtitle">今天有什么，让你想多看一眼？</p></div>
-        <div class="page-tools"><button class="time-toggle" id="timeToggle" aria-label="隐藏时间"><img src="./clock-sticker.jpg" alt=""></button><button class="clear-btn" id="clearBtn">清空记录</button></div>
+        <div class="page-tools"><button class="clear-btn" id="clearBtn">清空记录</button></div>
       </div>
       <div class="meals" id="meals"></div>
       <div class="page-nav"><button class="page-btn" id="prevPage" aria-label="Previous page">‹</button><span class="page-count" id="pageCount"></span><button class="page-btn" id="nextPage" aria-label="Next page">›</button></div>
