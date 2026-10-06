@@ -791,6 +791,39 @@
         margin: -8px 0 0 -13px;
       }
     }
+
+    /* Keep the journal switcher visible and pin the illustrated footer */
+    .shell {
+      padding-bottom: clamp(180px, 25vw, 235px);
+    }
+    .notebook-head {
+      transform: translateY(-18px);
+      margin-bottom: 58px;
+    }
+    .storybook-scene {
+      position: fixed;
+      left: 50%;
+      bottom: 0;
+      z-index: 80;
+      width: min(940px, 100vw);
+      margin: 0;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+    @media (max-width: 480px) {
+      .shell { padding-bottom: 190px; }
+      .notebook-head {
+        transform: translateY(-16px);
+        margin-bottom: 62px;
+      }
+      .storybook-scene {
+        left: 50%;
+        bottom: 0;
+        width: 100vw;
+        margin: 0;
+        transform: translateX(-50%);
+      }
+    }
   </style>
 </head>
 <body>
