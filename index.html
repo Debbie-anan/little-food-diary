@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#fff9ed" />
+  <meta name="theme-color" content="#f3f7df" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Memorable" />
@@ -238,6 +238,107 @@
       .stats { display: grid; grid-template-columns: 1fr 1fr; }
       .stat { min-width: 0; }
     }
+
+    /* Soft colored-pencil storybook direction */
+    :root {
+      --ink: #3d4c2d;
+      --muted: #7f8a70;
+      --paper: #f7f7df;
+      --card: #fffdf0;
+      --berry: #f1a6a0;
+      --berry-dark: #bc6e69;
+      --matcha: #a9d96b;
+      --yolk: #f5d66f;
+      --line: #dce1c2;
+      --shadow: 0 18px 46px rgba(81, 103, 58, .12);
+    }
+    body {
+      background:
+        radial-gradient(circle at 5% 10%, #dff0b9 0 7%, transparent 20%),
+        radial-gradient(circle at 96% 23%, #dbeeb4 0 8%, transparent 25%),
+        linear-gradient(180deg, #f4f8df 0%, #eef5d8 46%, #e1efd0 100%);
+      background-attachment: fixed;
+    }
+    body::before { opacity: .8; mix-blend-mode: multiply; }
+    .shell { max-width: 940px; padding-top: 22px; }
+    nav { margin-bottom: 34px; }
+    .brand { color: #477235; font-family: "Patrick Hand", "Long Cang", cursive; font-size: 30px; }
+    .brand-mark { width: 36px; height: 36px; border: 0; color: #fffbed; background: #91c95e; box-shadow: none; }
+    .date-pill, .lang-btn, .account-btn, .install-btn { border-color: #698855; box-shadow: none; }
+    .account-btn { background: #e4f1b8; }
+    .account-btn.signed-in { background: #aad779; }
+    .hero { position: relative; margin: 0 auto 34px; padding: 12px 16px 26px; }
+    .eyebrow { display: inline-block; padding: 4px 12px; border-radius: 10px 14px 9px 12px; color: #557542; background: #d9efac; font-size: 13px; letter-spacing: .09em; }
+    h1 { max-width: 720px; margin-top: 14px; color: #35462a; font-size: clamp(55px, 8vw, 82px); line-height: .96; }
+    h1 span { color: #648e45; }
+    h1 span::after { height: 5px; background: #bde477; }
+    .intro { max-width: 620px; color: #68755e; font-size: 19px; }
+    .stats { gap: 14px; }
+    .stat { border: 0; background: rgba(255,253,240,.72); box-shadow: 0 5px 16px #6e8d5420; }
+    .stat strong { color: #52763e; }
+    .notebook {
+      overflow: hidden;
+      padding-top: 30px;
+      border: 0;
+      border-radius: 26px 35px 29px 32px;
+      background: repeating-linear-gradient(to bottom, #fffdf0 0, #fffdf0 37px, #dfe5c8 38px);
+      box-shadow: 8px 10px 0 #cad9ae, var(--shadow);
+    }
+    .notebook::before { background: #efb7aa66; }
+    .notebook::after {
+      content: "✿  ·  ❀  ·  ✿";
+      position: absolute; right: 28px; bottom: 15px; z-index: 0;
+      color: #e5bd58; font-size: 16px; letter-spacing: 8px; opacity: .65;
+    }
+    .rings i { height: 8px; border-width: 2px; border-color: #70805e; background: #edf2d7; box-shadow: none; }
+    .page-corner { background: linear-gradient(135deg, #e8edcf 50%, transparent 51%); }
+    .view-tabs { width: min(310px, 100%); padding: 4px; border: 1px solid #dce1c2; border-radius: 99px; background: #fffbedcc; }
+    .view-tabs button[data-view] { flex: 1; border-radius: 99px; color: #536145; font-size: 17px; }
+    .view-tabs button[data-view][aria-pressed="true"] { color: #35512d; background: #cdec91; box-shadow: inset 0 -2px 0 #a6cc6a; }
+    .notebook-icons svg { stroke: #566e46; stroke-width: 1.65; }
+    .notebook-icons button:hover { background: #dff0b955; }
+    .section-head h2 { color: #4d613d; font-size: 28px; }
+    .section-head p { color: #87907a; }
+    .photo-wrap { border: 6px solid #fffdf3; border-radius: 3px; background: #eee9d6; box-shadow: 0 5px 12px #55684324; }
+    .meal-card:nth-child(4n+1) .photo-wrap { transform: rotate(-1.2deg); }
+    .meal-card:nth-child(4n+2) .photo-wrap { transform: rotate(1.4deg); }
+    .meal-card:nth-child(4n+3) .photo-wrap { transform: rotate(-.5deg); }
+    .caption { color: #68775c; }
+    .collage .meal-card { padding: 7px 7px 18px; border: 0; background: #fffdf4; box-shadow: 0 7px 16px #5366432b; }
+    .collage .photo-wrap { border: 0; transform: none; }
+    .empty { border-color: #b8c99d; background: #fffdf066; }
+    .page-btn { border: 1px solid #8ba271; color: #50653f; background: #fffdf0; box-shadow: 2px 3px 0 #b6cc92; }
+    .page-btn:hover:not(:disabled) { background: #dff0b9; }
+    .camera-dock::before {
+      content: "✿  ˚  ❀"; position: absolute; right: -10px; bottom: -15px; width: 100px;
+      color: #e0b84d; font-size: 18px; letter-spacing: 6px; pointer-events: none;
+    }
+    .camera-dock .upload-btn { width: 66px; height: 66px; border-color: #597047; color: #4e6240; background: #fffbe9; box-shadow: 4px 5px 0 #aacb78; }
+    .camera-dock .upload-btn:hover { color: #fff; background: #85b95c; }
+    .camera-menu { border-color: #8da575; background: #fffdf0; box-shadow: 4px 5px 0 #c4d6a2; }
+    .auth-card { border-color: #637b50; background: #fbfbe8; box-shadow: 8px 9px 0 #adc889; }
+    .auth-submit { border-color: #5c724a; background: #83b85d; box-shadow: 3px 4px 0 #587047; }
+    .calendar-day.today { border-color: #7dac56; }
+    .calendar-day .smile { color: #d29369; }
+    .calendar-day:hover, .calendar-day.selected { background: #e3f2ba; }
+    @media (max-width: 760px) {
+      .hero { padding-inline: 4px; }
+      h1 { font-size: clamp(50px, 15vw, 70px); }
+      .notebook { padding-top: 24px; }
+    }
+    @media (max-width: 480px) {
+      nav { margin-bottom: 26px; }
+      .brand { font-size: 26px; }
+      .hero { margin-bottom: 25px; }
+      h1 { font-size: clamp(46px, 14vw, 62px); }
+      .intro { font-size: 17px; }
+      .notebook { box-shadow: 5px 7px 0 #cad9ae, var(--shadow); }
+      .notebook-head { grid-template-columns: minmax(0, 1fr) 40px; column-gap: 8px; }
+      #calendarBtn, #timeToggle { width: 40px; height: 40px; min-width: 40px; }
+      .notebook-icons svg { width: 27px; height: 27px; }
+      .section-head h2 { font-size: 23px; }
+      .collage .meal-card { padding: 5px 5px 14px; }
+    }
   </style>
 </head>
 <body>
@@ -360,7 +461,7 @@
     let timesHidden = localStorage.getItem('little-keeps-hide-times') === 'true';
 
     const copy = {
-      zh: { brand:'Memorable', title:'把今天的<br><span>小小值得</span>留下', intro:'一顿好吃的、一朵奇怪的云、路上遇见的小狗……把让你笑了一下的瞬间，都收进这本生活手账。', today:'今日收藏', total:'全部瞬间', doodle:'今天，什么值得记住？', upload:'收藏这个瞬间 · 上传照片', uploading:'正在保存到云端…', install:'安装 App', login:'云端登录', loggedIn:'云端已连接', subtitle:'今天有什么，让你想多看一眼？', clear:'清空记录', emptyTitle:'这一页还在等故事', emptyBody:'上传一张值得记住的照片吧 ✿', caption:'今天的小小值得 ♡', page:'第 {n} / {all} 页', toast:'已安全保存到云端 ✦', uploadError:'这张照片读取或上传失败，请稍后重试。', storageError:'照片没能保存到云端，请检查网络后重试。', confirm:'要删除云端的全部生活记录吗？', meals:['清晨发现','午间一刻','下午偶遇','夜晚收藏'] },
+      zh: { brand:'Memorable', title:'把今天值得记住的，<br><span>轻轻收好</span>', intro:'一顿好吃的、一朵奇怪的云、路上遇见的小狗……把让你笑了一下的瞬间，都收进这本生活手账。', today:'今日收藏', total:'全部瞬间', doodle:'今天，什么值得记住？', upload:'收藏这个瞬间 · 上传照片', uploading:'正在保存到云端…', install:'安装 App', login:'云端登录', loggedIn:'云端已连接', subtitle:'今天有什么，让你想多看一眼？', clear:'清空记录', emptyTitle:'这一页还在等故事', emptyBody:'上传一张值得记住的照片吧 ✿', caption:'今天的小小值得 ♡', page:'第 {n} / {all} 页', toast:'已安全保存到云端 ✦', uploadError:'这张照片读取或上传失败，请稍后重试。', storageError:'照片没能保存到云端，请检查网络后重试。', confirm:'要删除云端的全部生活记录吗？', meals:['清晨发现','午间一刻','下午偶遇','夜晚收藏'] },
       en: { brand:'Memorable', title:'Keep the little things<br><span>worth remembering</span>', intro:'A lovely meal, a strange little cloud, a dog you met on the way… Keep every moment that made you smile in this tiny life journal.', today:"Today's keeps", total:'All moments', doodle:"What felt worth remembering?", upload:'Keep this moment · Upload photo', uploading:'Saving to cloud…', install:'Install App', login:'Cloud login', loggedIn:'Cloud connected', subtitle:'What made you stop and look today?', clear:'Clear all', emptyTitle:'This page is waiting for a story', emptyBody:'Add a moment worth remembering ✿', caption:'A little thing worth keeping ♡', page:'Page {n} / {all}', toast:'Safely saved to your cloud ✦', uploadError:'This photo could not be read or uploaded. Please try again.', storageError:'The photo could not be saved to the cloud. Check your connection.', confirm:'Delete your entire cloud journal?', meals:['Morning find','Midday moment','Afternoon sighting','Evening keep'] }
     };
 
