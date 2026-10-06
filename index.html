@@ -33,6 +33,13 @@
       font-weight: 400;
       font-display: swap;
     }
+    @font-face {
+      font-family: "Memorable Signature";
+      src: url("./assets/fonts/memorable-signature.woff2") format("woff2");
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+    }
 
     :root {
       --ink: #302d2b;
@@ -738,6 +745,51 @@
       nav { margin-bottom: 22px; }
       .notebook { padding-top: 10px; }
       .notebook-head { margin-top: 0; margin-bottom: 46px; }
+    }
+
+    /* Final cleanup: quiet background, true page footer, lifted journal heading */
+    body::after { display: none; }
+    .shell { padding-bottom: 0; }
+    .brand {
+      font-family: "Memorable Signature", "Segoe Script", cursive;
+      font-size: clamp(45px, 6.4vw, 62px);
+      line-height: .8;
+      letter-spacing: 0;
+      transform: rotate(-2.5deg);
+    }
+    .brand::after {
+      width: 122px;
+      margin: 31px 0 0 -128px;
+      border-top-width: 4px;
+    }
+    .notebook {
+      background-image:
+        radial-gradient(circle at 16% 21%, #e7dfc255 0 1px, transparent 2px),
+        radial-gradient(circle at 71% 64%, #d8ceb044 0 1px, transparent 2px),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.34' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.10'/%3E%3C/svg%3E"),
+        linear-gradient(112deg, #fffdf0 0%, #f8f3df 51%, #fffcef 100%);
+      background-size: 41px 43px, 53px 47px, 150px 150px, auto;
+      background-position: left top;
+      background-repeat: repeat, repeat, repeat, no-repeat;
+    }
+    .notebook-head {
+      transform: translateY(-72px);
+      margin-bottom: 58px;
+    }
+    .storybook-scene {
+      margin-bottom: 0;
+    }
+    @media (max-width: 480px) {
+      .brand { font-size: 49px; }
+      .brand::after { width: 98px; margin: 26px 0 0 -104px; }
+      .notebook-head {
+        transform: translateY(-98px);
+        margin-bottom: 62px;
+      }
+      .storybook-scene {
+        width: calc(100% + 26px);
+        margin: -8px 0 0 -13px;
+      }
     }
   </style>
 </head>
