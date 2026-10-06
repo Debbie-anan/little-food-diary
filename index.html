@@ -339,6 +339,59 @@
       .section-head h2 { font-size: 23px; }
       .collage .meal-card { padding: 5px 5px 14px; }
     }
+    /* Closer to the approved storybook mockup */
+    nav { padding-inline: 4px; }
+    .hero { min-height: 390px; }
+    .hero::after {
+      content: "⌁  ✿  ﹏  ❀";
+      position: absolute; right: 3%; top: 28%; color: #8fbd58; opacity: .65;
+      font-family: "Patrick Hand", cursive; font-size: 30px; letter-spacing: 12px;
+      transform: rotate(-8deg); pointer-events: none;
+    }
+    .notebook { margin-top: 0; padding-bottom: 38px; }
+    .notebook > * { position: relative; z-index: 1; }
+    .notebook .rings { position: absolute; }
+    .notebook::after {
+      content: ""; right: 20px; bottom: 18px; width: 90px; height: 35px;
+      background:
+        radial-gradient(ellipse at 15% 100%, #acd675 0 25%, transparent 27%),
+        radial-gradient(ellipse at 42% 100%, #8fc55d 0 23%, transparent 25%),
+        radial-gradient(ellipse at 72% 100%, #b3dc7d 0 23%, transparent 25%);
+      opacity: .42;
+    }
+    .notebook-head::after {
+      content: "❀  ˚  ♡"; position: absolute; right: 58px; top: 72px;
+      color: #e5b65d; font-size: 16px; letter-spacing: 8px; opacity: .6;
+      transform: rotate(-5deg); pointer-events: none;
+    }
+    .collage .meal-card::before {
+      content: ""; position: absolute; z-index: 2; left: 50%; top: -7px;
+      width: 34%; height: 14px; transform: translateX(-50%) rotate(-2deg);
+      background: #b5d990cc; opacity: .9; box-shadow: inset 0 0 7px #fff8;
+    }
+    .collage .meal-card:nth-child(3n+2)::before { background: #f2d875cc; transform: translateX(-50%) rotate(3deg); }
+    .collage .meal-card:nth-child(3n+3)::before { background: #a9d8e9cc; transform: translateX(-50%) rotate(-4deg); }
+    .storybook-scene { position: relative; z-index: 2; width: min(940px, calc(100% + 20px)); margin: -20px auto -66px; pointer-events: none; }
+    .storybook-scene img { display: block; width: 100%; height: auto; }
+    .camera-dock { bottom: calc(30px + env(safe-area-inset-bottom)); }
+    .camera-dock::before { display: none; }
+    .camera-dock .upload-btn { border-width: 2px; background: #fffbeded; backdrop-filter: blur(4px); }
+    @media (max-width: 760px) {
+      .hero { min-height: 350px; }
+      .hero::after { top: 33%; right: 0; font-size: 23px; letter-spacing: 8px; }
+      .storybook-scene { width: calc(100% + 26px); margin-left: -13px; margin-top: -8px; }
+    }
+    @media (max-width: 480px) {
+      .shell { padding-top: max(16px, env(safe-area-inset-top)); }
+      .hero { min-height: 0; padding-top: 8px; }
+      h1 { margin-top: 12px; font-size: clamp(43px, 12.5vw, 56px); line-height: 1.02; }
+      .hero::after { display: none; }
+      .stats { margin-top: 20px; }
+      .stat { padding: 12px 14px; }
+      .notebook { padding-bottom: 34px; border-radius: 22px 28px 24px 26px; }
+      .storybook-scene { margin-top: -10px; margin-bottom: -42px; }
+      .camera-dock { right: 18px; bottom: calc(20px + env(safe-area-inset-bottom)); }
+    }
   </style>
 </head>
 <body>
@@ -385,6 +438,7 @@
       <div class="meals" id="meals"></div>
       <div class="page-nav"><button class="page-btn" id="prevPage" aria-label="Previous page">‹</button><span class="page-count" id="pageCount"></span><button class="page-btn" id="nextPage" aria-label="Next page">›</button></div>
     </section>
+    <div class="storybook-scene" aria-hidden="true"><img src="./storybook-meadow.png" alt=""></div>
   </main>
   <div class="toast" id="toast">又收集到一份美味 ✦</div>
   <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Photo preview">
