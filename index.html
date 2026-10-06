@@ -12,7 +12,20 @@
   <link rel="apple-touch-icon" href="icon-192.png" />
   <title>Memorable · 生活照片手账</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Long+Cang&family=Ma+Shan+Zheng&family=Patrick+Hand&display=swap');
+    @font-face {
+      font-family: "Memorable Hand";
+      src: url("./assets/fonts/memorable-hand.woff2") format("woff2");
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Memorable Latin";
+      src: url("./assets/fonts/memorable-latin.woff2") format("woff2");
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+    }
 
     :root {
       --ink: #302d2b;
@@ -391,6 +404,152 @@
       .notebook { padding-bottom: 34px; border-radius: 22px 28px 24px 26px; }
       .storybook-scene { margin-top: -10px; margin-bottom: -42px; }
       .camera-dock { right: 18px; bottom: calc(20px + env(safe-area-inset-bottom)); }
+    }
+
+    /* Hand-bound storybook: local lettering + tactile deckled paper */
+    body, button, input {
+      font-family: "Memorable Hand", "STKaiti", "KaiTi", cursive;
+    }
+    .brand {
+      font-family: "Memorable Latin", "Segoe Print", cursive;
+      font-size: clamp(29px, 4vw, 38px);
+      color: #477838;
+      letter-spacing: .02em;
+    }
+    .brand::after {
+      content: "";
+      width: 76px;
+      height: 10px;
+      margin: 24px 0 0 -84px;
+      border-top: 4px solid #b3dd70;
+      border-radius: 50%;
+      transform: rotate(-4deg);
+    }
+    .eyebrow { display: none; }
+    h1, h1 span {
+      font-family: "Memorable Hand", "STKaiti", "KaiTi", cursive;
+      font-weight: 400;
+    }
+    h1 {
+      max-width: 790px;
+      margin: 2px 0 18px;
+      font-size: clamp(62px, 9vw, 96px);
+      line-height: 1.04;
+      color: #314d28;
+      letter-spacing: .035em;
+      text-shadow: .6px .8px 0 #78906133;
+    }
+    h1 span { color: #5f9448; }
+    h1 span::after {
+      height: 7px;
+      bottom: 1px;
+      background: linear-gradient(90deg, #acd968, #d8ea88 72%, transparent);
+      transform: rotate(-1.4deg) skewX(-14deg);
+    }
+    .intro {
+      max-width: 680px;
+      font-size: 23px;
+      line-height: 1.8;
+      color: #5c6b50;
+      letter-spacing: .035em;
+    }
+    .hero {
+      min-height: 0;
+      padding: 18px 26px 28px;
+      border-radius: 44% 56% 51% 49% / 12% 14% 86% 88%;
+      background: radial-gradient(ellipse at 48% 7%, #f8fbe9a8 0 18%, transparent 66%);
+    }
+    .stat {
+      border: 1px solid #d5ddbc;
+      background:
+        linear-gradient(#fffef2dd, #fffcebdd),
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.7' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.06'/%3E%3C/svg%3E");
+      box-shadow: 0 9px 20px #75944d1b, inset 0 0 18px #dfd8b72b;
+      border-radius: 22px 31px 25px 29px;
+    }
+    .stat strong { font-size: 30px; }
+    .stat span { font-size: 18px; }
+    .notebook {
+      overflow: visible;
+      isolation: isolate;
+      border: 0;
+      border-radius: 0;
+      clip-path: polygon(1.1% 1.2%, 7% .35%, 15% 1%, 24% .15%, 34% .9%, 45% .25%, 57% 1%, 68% .2%, 79% .75%, 90% .1%, 98.8% 1.25%, 99.5% 12%, 99% 25%, 99.7% 39%, 99.1% 54%, 99.6% 68%, 99% 83%, 98.5% 98.8%, 88% 99.6%, 76% 99%, 63% 99.7%, 50% 99.1%, 37% 99.8%, 24% 99%, 12% 99.7%, 1.1% 98.5%, .5% 84%, 1% 69%, .35% 54%, .9% 39%, .25% 24%);
+      background:
+        linear-gradient(90deg, transparent 0 34px, #dfa69a70 35px 36px, transparent 37px),
+        repeating-linear-gradient(to bottom, transparent 0 37px, #cfd9b776 38px 39px),
+        radial-gradient(ellipse at 14% 8%, #fffef8 0 10%, transparent 46%),
+        linear-gradient(105deg, #fffdf1 0%, #fcfae9 48%, #fffdf4 100%);
+      box-shadow: none;
+      filter: drop-shadow(9px 12px 0 #bdcd9b99) drop-shadow(0 17px 24px #58723b24);
+    }
+    .notebook::before {
+      left: 0;
+      inset: 0;
+      width: auto;
+      z-index: -1;
+      background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='130' height='130'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.48' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.12'/%3E%3C/svg%3E");
+      mix-blend-mode: multiply;
+      opacity: .32;
+      pointer-events: none;
+    }
+    .notebook::after {
+      content: "";
+      right: 9%;
+      bottom: -7px;
+      width: 28%;
+      height: 18px;
+      z-index: 2;
+      background: #f7f4df;
+      filter: blur(1px);
+      clip-path: polygon(0 34%, 10% 58%, 20% 22%, 31% 69%, 43% 27%, 56% 72%, 68% 20%, 80% 65%, 91% 30%, 100% 55%, 100% 100%, 0 100%);
+      opacity: .9;
+    }
+    .notebook-head { margin-top: 8px; }
+    .view-tabs {
+      border: 0;
+      background: #f8f4dfb8;
+      box-shadow: inset 0 0 0 1px #d8d5b7, 0 3px 8px #6a79401a;
+    }
+    .view-tabs button[data-view] { font-size: 20px; }
+    .view-tabs button[data-view][aria-pressed="true"] {
+      background: #c8e98d;
+      box-shadow: 0 3px 0 #9fbd6e;
+    }
+    .section-head h2 {
+      font-family: "Memorable Hand", "STKaiti", "KaiTi", cursive;
+      color: #3e5434;
+      font-size: 32px;
+      letter-spacing: .035em;
+    }
+    .section-head p { font-size: 19px; }
+    .page-count { font-size: 17px; }
+    @media (max-width: 480px) {
+      nav { margin-bottom: 18px; }
+      .brand-mark { display: none; }
+      .brand { font-size: 31px; }
+      .hero { padding: 8px 5px 20px; margin-bottom: 20px; }
+      h1 { margin-top: 0; font-size: clamp(45px, 12vw, 55px); line-height: 1.08; letter-spacing: .025em; }
+      .intro { font-size: 18px; line-height: 1.7; }
+      .stats { margin-top: 17px; gap: 10px; }
+      .stat { padding: 13px 15px; border-radius: 18px 25px 20px 23px; }
+      .stat strong { font-size: 25px; }
+      .stat span { font-size: 16px; }
+      .notebook {
+        width: calc(100% + 12px);
+        margin-left: -6px;
+        padding-top: 27px;
+        border-radius: 0;
+        background:
+          linear-gradient(90deg, transparent 0 30px, #dfa69a70 31px 32px, transparent 33px),
+          repeating-linear-gradient(to bottom, transparent 0 37px, #cfd9b776 38px 39px),
+          radial-gradient(ellipse at 14% 8%, #fffef8 0 10%, transparent 46%),
+          linear-gradient(105deg, #fffdf1, #fcfae9 48%, #fffdf4);
+      }
+      .notebook::before { left: 0; }
+      .section-head h2 { font-size: clamp(22px, 6.8vw, 29px); }
+      .section-head p { font-size: 15px; }
     }
   </style>
 </head>
