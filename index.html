@@ -824,6 +824,52 @@
         transform: translateX(-50%);
       }
     }
+
+    /* Two upload affordances: blank day page + illustrated footer camera */
+    .empty[role="button"] {
+      cursor: pointer;
+      transition: border-color .2s ease, background-color .2s ease, transform .2s ease;
+    }
+    .empty[role="button"]:hover,
+    .empty[role="button"]:focus-visible {
+      border-color: #82aa61;
+      background: #f5f7dbcc;
+      outline: none;
+      transform: translateY(-2px);
+    }
+    .camera-dock {
+      right: 0;
+      bottom: calc(4px + env(safe-area-inset-bottom));
+      z-index: 95;
+    }
+    .camera-dock .upload-btn {
+      width: min(30vw, 150px);
+      height: 118px;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+      opacity: 0;
+    }
+    .camera-dock .upload-btn:focus-visible {
+      opacity: .16;
+      outline: 3px dashed #4f743b;
+      outline-offset: -16px;
+    }
+    .camera-dock .camera-menu {
+      right: 12px;
+      bottom: 116px;
+    }
+    @media (max-width: 480px) {
+      .camera-dock {
+        right: 0;
+        bottom: calc(2px + env(safe-area-inset-bottom));
+      }
+      .camera-dock .upload-btn {
+        width: 32vw;
+        height: 105px;
+      }
+      .camera-dock .camera-menu { bottom: 104px; }
+    }
   </style>
 </head>
 <body>
@@ -844,15 +890,16 @@
         </div>
       </div>
 
-      <div class="camera-dock">
-        <div class="camera-menu" id="cameraMenu" hidden><button id="cameraChoice">拍照</button><button id="galleryBtn">从相册选择</button></div>
-        <button class="upload-btn" id="uploadBtn" aria-label="添加照片" aria-expanded="false" aria-controls="cameraMenu">
-          <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M7 16h8l3-5h12l3 5h8a3 3 0 0 1 3 3v19a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V19a3 3 0 0 1 3-3Z"/><circle cx="24" cy="28" r="8" fill="none" stroke="currentColor" stroke-width="3"/></svg>
-        </button>
-        <input id="cameraInput" type="file" accept="image/*" capture="environment" />
-        <input id="fileInput" type="file" accept="image/*" multiple />
-      </div>
     </section>
+
+    <div class="camera-dock">
+      <div class="camera-menu" id="cameraMenu" hidden><button id="cameraChoice">拍照</button><button id="galleryBtn">从相册选择</button></div>
+      <button class="upload-btn" id="uploadBtn" aria-label="添加照片：拍照或从相册选择" aria-expanded="false" aria-controls="cameraMenu">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M7 16h8l3-5h12l3 5h8a3 3 0 0 1 3 3v19a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V19a3 3 0 0 1 3-3Z"/><circle cx="24" cy="28" r="8" fill="none" stroke="currentColor" stroke-width="3"/></svg>
+      </button>
+      <input id="cameraInput" type="file" accept="image/*" capture="environment" />
+      <input id="fileInput" type="file" accept="image/*" multiple />
+    </div>
 
     <section class="notebook">
       <div class="rings"><i></i><i></i><i></i><i></i><i></i></div>
@@ -965,6 +1012,18 @@
     $('#cameraChoice').onclick = () => { closeCameraMenu(); currentUser ? $('#cameraInput').click() : openAuth(); };
     $('#galleryBtn').onclick = () => { closeCameraMenu(); currentUser ? $('#fileInput').click() : openAuth(); };
     document.addEventListener('click', event => { if (!event.target.closest('.camera-dock')) closeCameraMenu(); });
+    function chooseFromBlankPage() {
+      if (diaryView !== 'day') return;
+      currentUser ? $('#fileInput').click() : openAuth();
+    }
+    $('#meals').addEventListener('click', event => {
+      if (event.target.closest('.empty[role="button"]')) chooseFromBlankPage();
+    });
+    $('#meals').addEventListener('keydown', event => {
+      if (event.target.closest('.empty[role="button"]') && (event.key === 'Enter' || event.key === ' ')) {
+        event.preventDefault(); chooseFromBlankPage();
+      }
+    });
     $('#calendarBtn').onclick = () => {
       const anchor = getPages()[pageIndex] || todayKey;
       calendarMonth = new Date(anchor.slice(0, 7) + '-01T12:00:00');
@@ -1432,7 +1491,8 @@
       $('#todayCount').textContent = entries.filter(e => e.date === todayKey).length;
       $('#totalCount').textContent = entries.length;
       if (!pageEntries.length) {
-        $('#meals').innerHTML = `<div class="empty"><div><b>${c.emptyTitle}</b>${c.emptyBody}</div></div>`;
+        const emptyAction = diaryView === 'day' ? `role="button" tabindex="0" aria-label="${language === 'zh' ? '从相册选择照片' : 'Choose photos from gallery'}"` : '';
+        $('#meals').innerHTML = `<div class="empty" ${emptyAction}><div><b>${c.emptyTitle}</b>${c.emptyBody}</div></div>`;
         return;
       }
       const photoCards = items => items.map((e, i) => `
