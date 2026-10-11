@@ -922,6 +922,16 @@
         height: clamp(330px, 40svh, 390px);
       }
     }
+
+    /* Clean square photos in week/month collages */
+    .photo-wrap,
+    .collage .photo-wrap,
+    .collage .meal-card {
+      border-radius: 0;
+    }
+    .collage .meal-card::before {
+      display: none;
+    }
   </style>
 </head>
 <body>
