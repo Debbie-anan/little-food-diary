@@ -911,6 +911,17 @@
     }
     .collage .caption { padding-top: 6px; }
     .collage .meal-card::before { top: -9px; }
+
+    /* Week and month reuse the same physical sheet size as day view */
+    .meals.collage {
+      flex: 0 0 auto;
+      height: clamp(350px, 44svh, 455px);
+    }
+    @media (max-width: 480px) {
+      .meals.collage {
+        height: clamp(330px, 40svh, 390px);
+      }
+    }
   </style>
 </head>
 <body>
